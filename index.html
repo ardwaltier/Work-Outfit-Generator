@@ -4,74 +4,406 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Work Outfit Picker</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Marcellus+SC&family=Source+Sans+3:wght@400;500;600;700&display=swap" rel="stylesheet">
 <meta name="theme-color" content="#111827">
 <style>
 :root{
-  --bg:#f5f5f4; --card:#fff; --text:#171717; --muted:#737373;
-  --border:#e5e5e5; --accent:#111827; --accentText:#fff; --chip:#f0f0ef;
+  --stone:#f2ece0;
+  --paper:#f8f3e8;
+  --ink:#1f2a26;
+  --muted:#67655f;
+  --line:#cdbd9d;
+  --line-2:#ab915c;
+  --green:#1b4036;
+  --green-2:#223a32;
+  --green-soft:#e4e8e2;
+  --burgundy:#5d3438;
+  --charcoal:#2f342f;
+  --shadow:rgba(20,24,20,.05);
 }
-@media(prefers-color-scheme:dark){
-  :root{--bg:#111;--card:#1a1a1a;--text:#f5f5f5;--muted:#a3a3a3;--border:#303030;--accent:#f5f5f5;--accentText:#111;--chip:#242424}
+@media (prefers-color-scheme:dark){
+  :root{
+    --stone:#161815;
+    --paper:#1c1f1b;
+    --ink:#ece3d2;
+    --muted:#b5ad9f;
+    --line:#473f32;
+    --line-2:#8c7447;
+    --green:#315247;
+    --green-2:#243c34;
+    --green-soft:#263028;
+    --burgundy:#7a4d51;
+    --charcoal:#d9d1c3;
+    --shadow:rgba(0,0,0,.16);
+  }
 }
 *{box-sizing:border-box}
-body{margin:0;background:var(--bg);color:var(--text);font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
-.app{max-width:780px;margin:0 auto;padding:18px 14px 44px}
-h1{font-size:26px;margin:6px 0 2px}.sub{color:var(--muted);font-size:14px;margin-bottom:18px}
-.card{background:var(--card);border:1px solid var(--border);border-radius:18px;padding:16px;margin:12px 0}
-.weather-grid{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}
-.metric{background:var(--chip);border-radius:14px;padding:12px}.label{font-size:12px;color:var(--muted)}.value{font-size:18px;font-weight:650;margin-top:3px}
-.badges{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}.badge{background:var(--chip);border-radius:999px;padding:7px 10px;font-size:12px}
-button,input,select{font:inherit;border-radius:14px;border:1px solid var(--border)}
-button{width:100%;padding:13px 14px;background:var(--accent);color:var(--accentText);font-weight:650;border:none;margin-top:10px}
-button.secondary{background:var(--card);color:var(--text);border:1px solid var(--border)}
-input,select{width:100%;padding:12px;background:var(--card);color:var(--text)}
-label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}
-.row{display:grid;grid-template-columns:1fr 1fr;gap:10px}
-.outfit{display:grid;grid-template-columns:1fr;gap:9px;margin-top:12px}
-.piece{border:1px solid var(--border);border-radius:14px;padding:12px}.piece .type{font-size:12px;color:var(--muted)}.piece .name{font-weight:650;margin-top:2px}
-.why,.status,.small{color:var(--muted);line-height:1.45}.why,.status{font-size:14px}.small{font-size:12px;margin-top:8px}
-.option{border:1px solid var(--border);border-radius:14px;padding:12px;margin-top:9px}.option strong{display:block;margin-bottom:4px}
-.actions{display:grid;grid-template-columns:1fr;gap:8px;margin-top:10px}.hidden{display:none}
-@media(min-width:600px){.weather-grid{grid-template-columns:repeat(4,1fr)}.outfit{grid-template-columns:repeat(3,1fr)}.actions{grid-template-columns:1fr 1fr}}
+body{
+  margin:0;
+  background:var(--stone);
+  color:var(--ink);
+  font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+}
+.app{
+  max-width:760px;
+  margin:0 auto;
+  padding:18px 14px 46px;
+}
+.brand{
+  position:relative;
+  padding:10px 2px 18px;
+  margin-bottom:16px;
+  border-bottom:1px solid var(--line);
+}
+.brand:before,
+.brand:after{
+  content:"";
+  position:absolute;
+  top:6px;
+  width:78px;
+  border-top:2px solid var(--line-2);
+}
+.brand:before{left:0}
+.brand:after{right:0}
+.brand h1{
+  margin:0;
+  text-align:center;
+  font-family:"Marcellus SC", Georgia, serif;
+  font-size:38px;
+  line-height:1;
+  letter-spacing:.12em;
+  font-weight:400;
+  color:var(--ink);
+  text-transform:uppercase;
+}
+.brand .kicker{
+  text-align:center;
+  color:var(--muted);
+  font-size:11px;
+  letter-spacing:.24em;
+  text-transform:uppercase;
+  margin-bottom:10px;
+}
+.brand .ornament{
+  display:flex;
+  justify-content:center;
+  align-items:center;
+  gap:8px;
+  margin-top:10px;
+  color:var(--line-2);
+  font-size:10px;
+  letter-spacing:.2em;
+}
+.brand .ornament:before,
+.brand .ornament:after{
+  content:"";
+  display:block;
+  width:88px;
+  max-width:24vw;
+  border-top:1px solid var(--line-2);
+}
+.card{
+  position:relative;
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:6px;
+  padding:16px;
+  margin:12px 0;
+  box-shadow:0 1px 0 var(--shadow);
+}
+.card:before{
+  content:"";
+  position:absolute;
+  inset:5px;
+  border:1px solid rgba(171,145,92,.18);
+  border-radius:3px;
+  pointer-events:none;
+}
+.card.primary{
+  border:1px solid var(--line-2);
+}
+.card.primary:before{
+  border:1px solid rgba(171,145,92,.45);
+}
+.section-title{
+  margin:0 0 4px;
+  font-family:"Marcellus SC", Georgia, serif;
+  font-size:21px;
+  letter-spacing:.11em;
+  font-weight:400;
+  text-transform:uppercase;
+  color:var(--green);
+}
+.section-sub{
+  margin:0 0 12px;
+  color:var(--muted);
+  font-size:13px;
+}
+label{
+  display:block;
+  margin:9px 0 5px;
+  color:var(--muted);
+  font-size:12px;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+input,select,button{
+  font:inherit;
+  border-radius:4px;
+}
+input{
+  width:100%;
+  padding:11px 12px;
+  border:1px solid var(--line);
+  background:var(--paper);
+  color:var(--ink);
+}
+select{
+  width:100%;
+  padding:11px 38px 11px 12px;
+  margin-bottom:3px;
+  border:1px solid var(--green-2);
+  background:var(--green);
+  color:#fff;
+  font-weight:600;
+  appearance:auto;
+}
+select:focus,input:focus,button:focus{
+  outline:3px solid color-mix(in srgb, var(--line-2) 45%, transparent);
+  outline-offset:2px;
+}
+button{
+  width:100%;
+  padding:12px 14px;
+  border:1px solid transparent;
+  background:var(--green);
+  color:#fff;
+  font-weight:650;
+  cursor:pointer;
+  letter-spacing:.04em;
+  text-transform:uppercase;
+}
+button:hover{background:var(--green-2)}
+button.secondary{
+  background:transparent;
+  color:var(--green);
+  border-color:var(--green);
+}
+button.skip{
+  background:transparent;
+  color:var(--burgundy);
+  border-color:var(--burgundy);
+}
+button.compact{
+  margin:0;
+  padding:10px 12px;
+}
+.card > button:not(.compact){margin-top:18px}
+.card > .row + button{margin-top:18px}
+.actions button{margin-top:0}
+.row{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+}
+.location-row{
+  display:grid;
+  grid-template-columns:1fr 120px;
+  gap:8px;
+}
+.weather-bar{
+  display:grid;
+  grid-template-columns:1fr auto;
+  gap:12px;
+  align-items:center;
+  padding:12px 14px;
+  background:var(--green-soft);
+  border:1px solid var(--line);
+  border-radius:4px;
+  margin-top:10px;
+}
+.weather-main{
+  font-family:"Marcellus SC", Georgia, serif;
+  font-size:21px;
+  letter-spacing:.06em;
+  text-transform:uppercase;
+}
+.weather-meta{
+  font-size:12px;
+  color:var(--muted);
+  margin-top:4px;
+}
+.weather-temp{
+  font-family:"Source Sans 3",-apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+  font-size:32px;
+  font-weight:700;
+  white-space:nowrap;
+  color:var(--green);
+}
+.weather-grid,.badges{display:none}
+.outfit{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+  margin-top:12px;
+}
+.piece{
+  display:grid;
+  grid-template-columns:72px 1fr;
+  align-items:baseline;
+  border-top:1px solid var(--line);
+  padding:9px 2px;
+}
+.piece:first-child{border-top:0}
+.piece .type{
+  font-size:11px;
+  color:var(--burgundy);
+  text-transform:uppercase;
+  letter-spacing:.12em;
+}
+.piece .name{
+  font-family:"Marcellus SC", Georgia, serif;
+  font-size:18px;
+  letter-spacing:.03em;
+}
+.why,.status,.small{
+  color:var(--muted);
+  line-height:1.45;
+}
+.why,.status{font-size:13px}
+.small{font-size:12px;margin-top:7px}
+.actions{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+  margin-top:12px;
+}
+.option{
+  border-top:1px solid var(--line);
+  padding:11px 2px;
+  margin-top:0;
+}
+.option:first-child{border-top:0}
+.option strong{
+  font-family:"Marcellus SC", Georgia, serif;
+  font-weight:400;
+  font-size:18px;
+  letter-spacing:.05em;
+  display:block;
+  margin-bottom:4px;
+  color:var(--green);
+  text-transform:uppercase;
+}
+.hidden{display:none}
+details{
+  background:var(--paper);
+  border:1px solid var(--line);
+  border-radius:6px;
+  padding:0 15px;
+  margin-top:12px;
+}
+summary{
+  cursor:pointer;
+  padding:14px 0;
+  font-family:"Marcellus SC", Georgia, serif;
+  font-size:17px;
+  letter-spacing:.06em;
+  color:var(--green);
+  text-transform:uppercase;
+}
+details .details-body{
+  padding:0 0 14px;
+  color:var(--muted);
+  font-size:13px;
+  line-height:1.55;
+}
+.divider{
+  position:relative;
+  margin:12px 0 10px;
+  height:14px;
+}
+.divider:before{
+  content:"";
+  position:absolute;
+  left:0; right:0; top:50%;
+  border-top:1px solid var(--line-2);
+}
+.divider:after{
+  content:"■";
+  position:absolute;
+  left:50%; top:50%;
+  transform:translate(-50%,-54%);
+  background:var(--paper);
+  color:var(--line-2);
+  padding:0 8px;
+  font-size:8px;
+}
+@media(min-width:600px){
+  .outfit{
+    grid-template-columns:repeat(3,1fr);
+    gap:8px;
+  }
+  .piece{
+    display:block;
+    border:1px solid var(--line);
+    border-radius:4px;
+    padding:11px;
+    background:rgba(255,255,255,.08);
+  }
+  .piece:first-child{border-top:1px solid var(--line)}
+  .piece .name{margin-top:4px}
+  .actions{grid-template-columns:1fr 1fr}
+}
 </style>
 </head>
 <body>
 <div class="app">
-  <h1>Work Outfit Picker</h1>
-  <div class="sub">Actual weather first. Month and season act as a secondary style bias.</div>
+  <header class="brand">
+    <div class="kicker">Daily wardrobe</div>
+    <h1>Outfit Picker</h1>
+    <div class="ornament">■</div>
+  </header>
 
   <div class="card">
-    <div style="font-weight:650">Weather for outfit</div>
-    <label for="forecastDay">Which day are you dressing for?</label>
+    <h2 class="section-title">Plan the day</h2>
+    <p class="section-sub">Bellevue is the default. Weather determines the outfit; the month is a secondary cue.</p>
+    <label for="forecastDay">Dressing for</label>
     <select id="forecastDay">
       <option value="0">Today</option>
       <option value="1">Tomorrow</option>
     </select>
     <label for="locationInput">Location</label>
-    <div class="row">
+    <div class="location-row">
       <input id="locationInput" value="Bellevue, WA" aria-label="Weather location">
-      <button id="loadLocationBtn" type="button" style="margin-top:0">Load weather</button>
+      <button id="loadLocationBtn" type="button" class="compact">Update</button>
     </div>
-    <div id="weatherStatus" class="status" style="margin-top:10px">Loading Bellevue weather for today…</div>
-    <div id="weatherPanel" class="hidden" style="margin-top:12px">
+    <div id="weatherStatus" class="status" style="margin-top:9px">Loading Bellevue weather for today…</div>
+    <div id="weatherPanel" class="hidden">
+      <div class="weather-bar">
+        <div>
+          <div id="locationWeatherTitle" class="weather-main">Bellevue · Today</div>
+          <div id="weatherSummary" class="weather-meta">Loading forecast…</div>
+        </div>
+        <div id="tempNow" class="weather-temp">—</div>
+      </div>
       <div class="weather-grid">
-        <div class="metric"><div class="label">Now</div><div id="tempNow" class="value">—</div></div>
-        <div class="metric"><div class="label">Feels like</div><div id="feels" class="value">—</div></div>
-        <div class="metric"><div class="label">Rain today</div><div id="rain" class="value">—</div></div>
-        <div class="metric"><div class="label">High / Low</div><div id="highlow" class="value">—</div></div>
+        <div><div id="feels">—</div></div>
+        <div><div id="rain">—</div></div>
+        <div><div id="highlow">—</div></div>
       </div>
       <div class="badges">
-        <span id="locationBadge" class="badge"></span>
-        <span id="seasonBadge" class="badge"></span>
-        <span id="weatherBadge" class="badge"></span>
-        <span class="badge">Weather takes priority</span>
+        <span id="locationBadge"></span>
+        <span id="seasonBadge"></span>
+        <span id="weatherBadge"></span>
       </div>
     </div>
-    <div class="small">Uses Open-Meteo weather + geocoding. No API key is required.</div>
   </div>
 
-  <div class="card">
-    <div style="font-weight:650">Pick my outfit</div>
+  <div class="card primary">
+    <h2 class="section-title">Pick my outfit</h2>
+    <p class="section-sub">One tap for a weather-aware recommendation.</p>
     <label for="dress">Dress level</label>
     <select id="dress">
       <option value="any">Anything work-appropriate</option>
@@ -86,17 +418,19 @@ label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}
         <div class="piece"><div class="type">Top</div><div id="topOut" class="name"></div></div>
         <div class="piece"><div class="type">Shoes</div><div id="shoesOut" class="name"></div></div>
       </div>
+      <div class="divider"></div>
       <div id="whyOut" class="why"></div>
       <div class="actions">
         <button id="anotherBtn" type="button" class="secondary">Another option</button>
-        <button id="skipBtn" type="button" class="secondary">Don’t suggest this today</button>
+        <button id="skipBtn" type="button" class="skip">Don’t suggest this today</button>
       </div>
       <div id="skipStatus" class="small" aria-live="polite"></div>
     </div>
   </div>
 
   <div class="card">
-    <div style="font-weight:650">Build around an item</div>
+    <h2 class="section-title">Build around an item</h2>
+    <p class="section-sub">Start with one piece and build around it.</p>
     <div class="row">
       <div>
         <label for="category">Category</label>
@@ -115,19 +449,17 @@ label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}
     <div id="buildResults"></div>
   </div>
 
-  <div class="card">
-    <div style="font-weight:650">Rules built into the picker</div>
-    <div class="why">
-      <strong>Weather wins:</strong> choose Today or Tomorrow; the selected day’s temperature, feels-like temperature, forecast high and precipitation are the strongest inputs.
+  <details>
+    <summary>How recommendations work</summary>
+    <div class="details-body"><strong>Weather wins:</strong> choose Today or Tomorrow; the selected day’s temperature, feels-like temperature, forecast high and precipitation are the strongest inputs.
       Sweaters are excluded at 65°F+ effective temperature, and the L.L.Bean Waterfowl sweater is reserved mostly for sub-50°F days.
       Dark-brown cords are primarily October–March and are excluded in warmer weather.
       Rugby shirts are allowed when the forecast high is 72°F or lower.
       Your 28″ ABC pants are polo-first and Jordan-only—boots and Stan Smiths are excluded with them.
       Boots are completely excluded from May through September, and from October through April they are only considered when the effective temperature is below 65°F.
       The picker favors contrast (dark pants with lighter tops, khaki with darker tops), avoids overly brown combinations without separation, treats black dress Blundstones as the more polished boot and Tobacco #1911s as the more casual/rugged boot, and keeps jeans in casual-work territory.
-      The calendar month then nudges color, texture and footwear without overriding unusual weather. Every wardrobe item is included in the outfit engine; curated combinations are preferred, and compatible fallback combinations are generated automatically so Build Around an Item works for every piece.
-    </div>
-  </div>
+      The calendar month then nudges color, texture and footwear without overriding unusual weather. Every wardrobe item is included in the outfit engine; curated combinations are preferred, and compatible fallback combinations are generated automatically so Build Around an Item works for every piece.</div>
+  </details>
 </div>
 
 <script>
@@ -689,10 +1021,13 @@ label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}
     };
 
     currentLocation=[loc.name, loc.admin1].filter(Boolean).join(', ');
-    $('tempNow').textContent=dayOffset === 0 ? `${Math.round(wx.temp)}°F` : `${Math.round(wx.temp)}°F`;
+    $('tempNow').textContent=`${Math.round(wx.temp)}°`;
     $('feels').textContent=`${Math.round(wx.feels)}°F`;
     $('rain').textContent=`${wx.precip.toFixed(2)} in`;
     $('highlow').textContent=`${Math.round(wx.high)}° / ${Math.round(wx.low)}°`;
+    $('locationWeatherTitle').textContent=`${currentLocation} · ${dayOffset === 1 ? 'Tomorrow' : 'Today'}`;
+    const rainText = wx.precip >= 0.15 ? `${wx.precip.toFixed(2)} in rain` : 'Dry';
+    $('weatherSummary').textContent=`High ${Math.round(wx.high)}° · Low ${Math.round(wx.low)}° · ${rainText}`;
     $('locationBadge').textContent=`${currentLocation} · ${dayOffset === 1 ? 'Tomorrow' : 'Today'}`;
     $('seasonBadge').textContent=`Month bias: ${seasonBias()}`;
     $('weatherBadge').textContent=`Weather: ${weatherClass().replace('-', ' ')}`;
