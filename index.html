@@ -125,7 +125,7 @@ label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}
       Your 28″ ABC pants are polo-first and Jordan-only—boots and Stan Smiths are excluded with them.
       Boots are completely excluded from May through September, and from October through April they are only considered when the effective temperature is below 65°F.
       The picker favors contrast (dark pants with lighter tops, khaki with darker tops), avoids overly brown combinations without separation, treats black dress Blundstones as the more polished boot and Tobacco #1911s as the more casual/rugged boot, and keeps jeans in casual-work territory.
-      The calendar month then nudges color, texture and footwear without overriding unusual weather.
+      The calendar month then nudges color, texture and footwear without overriding unusual weather. Every wardrobe item is included in the outfit engine; curated combinations are preferred, and compatible fallback combinations are generated automatically so Build Around an Item works for every piece.
     </div>
   </div>
 </div>
@@ -247,6 +247,71 @@ label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}
   const $ = id => document.getElementById(id);
   const key = o => o.slice(0,3).join('||');
   const isSweater = top => sweaters.includes(top);
+
+  const oxfordTops = tops.filter(t => t.includes('Oxford'));
+  const poloTops = tops.filter(t => t.includes('polo'));
+
+  function classifyTop(top){
+    if (top.includes('Oxford')) return 'oxford';
+    if (top.includes('polo')) return 'polo';
+    if (top.includes('rugby')) return 'rugby';
+    if (top.includes('denim shirt')) return 'denim';
+    if (isSweater(top)) return 'sweater';
+    return 'other';
+  }
+
+  function basePairingOkay(pant, top, shoe){
+    const type = classifyTop(top);
+
+    // ABC rule: polo + Jordan only.
+    if (pant.includes('ABC')) {
+      return type === 'polo' && shoe.includes('Jordan 1');
+    }
+
+    // Oxfords work best with 365s, cords and jeans.
+    if (type === 'oxford') {
+      if (pant.includes('ABC')) return false;
+      return true;
+    }
+
+    // Sweaters, rugby and denim shirts stay off ABC pants.
+    if ((type === 'sweater' || type === 'rugby' || type === 'denim') && pant.includes('ABC')) {
+      return false;
+    }
+
+    return true;
+  }
+
+  function generatedDressLevel(pant, top, shoe){
+    const type = classifyTop(top);
+    if (pant.includes('jeans') || pant.includes('Levi') || pant.includes('denim')) return 'casual';
+    if (type === 'rugby' || type === 'denim') return 'casual';
+    if (pant.includes('ABC')) return 'casual';
+    if (type === 'oxford' && (shoe.includes('Stan Smith') || shoe.includes('Black dress') || shoe.includes('Tobacco'))) return 'polished';
+    if (type === 'sweater' && (pant.includes('365') || pant.includes('Cords'))) return 'polished';
+    return 'casual';
+  }
+
+  function generatedCandidates(){
+    const seen = new Set(outfits.map(key));
+    const generated = [];
+
+    for (const pant of pants){
+      for (const top of tops){
+        for (const shoe of shoes){
+          if (!basePairingOkay(pant, top, shoe)) continue;
+          const row = [pant, top, shoe, generatedDressLevel(pant, top, shoe)];
+          if (seen.has(key(row))) continue;
+          generated.push(row);
+        }
+      }
+    }
+    return generated;
+  }
+
+  function allCandidateOutfits(){
+    return outfits.concat(generatedCandidates());
+  }
 
   function monthSeason(month){
     if ([11,0,1].includes(month)) return 'winter';
@@ -447,10 +512,10 @@ label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}
   }
 
   function filteredPool(){
-    let pool = outfits.filter(compatible);
+    let pool = allCandidateOutfits().filter(compatible);
     const dress = $('dress').value;
     if (dress !== 'any') pool = pool.filter(o => o[3] === dress);
-    if (!pool.length) pool = outfits.filter(o => !skippedToday.has(key(o)) && (dress === 'any' || o[3] === dress));
+    if (!pool.length) pool = allCandidateOutfits().filter(o => !skippedToday.has(key(o)) && (dress === 'any' || o[3] === dress));
     return pool;
   }
 
@@ -501,14 +566,47 @@ label{display:block;font-size:13px;color:var(--muted);margin:10px 0 5px}
   function buildAround(){
     const idx = $('category').value === 'pants' ? 0 : $('category').value === 'tops' ? 1 : 2;
     const chosen = $('item').value;
-    let pool = outfits.filter(o => o[idx] === chosen && compatible(o));
-    if (!pool.length) pool = outfits.filter(o => o[idx] === chosen && !skippedToday.has(key(o)));
-    pool = pool.map(o=>({o,s:score(o)})).sort((a,b)=>b.s-a.s).slice(0,8).map(x=>x.o);
+
+    let pool = allCandidateOutfits().filter(o => o[idx] === chosen && compatible(o));
+
+    // If weather is so restrictive that nothing survives, keep all hard wardrobe rules
+    // but relax weather-only filtering enough to still show usable combinations.
+    if (!pool.length) {
+      pool = allCandidateOutfits().filter(o => {
+        if (o[idx] !== chosen || skippedToday.has(key(o))) return false;
+        const [pant, top, shoe] = o;
+        if (!basePairingOkay(pant, top, shoe)) return false;
+
+        const month = new Date().getMonth() + 1;
+        const t = effectiveTemp();
+        const high = wx ? wx.high : t;
+        const isBoot = shoe.includes('Blundstone');
+
+        if (pant.includes('ABC') && !shoe.includes('Jordan 1')) return false;
+        if (pant.includes('ABC') && !top.includes('polo')) return false;
+        if (isBoot && month >= 5 && month <= 9) return false;
+        if (isBoot && t >= 65) return false;
+        if (isSweater(top) && t >= 65) return false;
+        if (top.includes('Waterfowl') && t >= 50) return false;
+        if (pant.includes('Flex Terry Cords') && (month < 10 && month > 3)) return false;
+        if (top.includes('rugby') && high > 72) return false;
+        return true;
+      });
+    }
+
+    pool = pool
+      .map(o=>({o,s:score(o)}))
+      .sort((a,b)=>b.s-a.s)
+      .slice(0,10)
+      .map(x=>x.o);
+
     $('buildResults').innerHTML = '';
+
     if(!pool.length){
-      $('buildResults').innerHTML = '<div class="small">No saved combinations match that item today.</div>';
+      $('buildResults').innerHTML = '<div class="small">No outfit is available for that item under today’s hard wardrobe rules.</div>';
       return;
     }
+
     pool.forEach((o,i)=>{
       const div=document.createElement('div');
       div.className='option';
