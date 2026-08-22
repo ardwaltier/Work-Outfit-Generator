@@ -342,7 +342,7 @@ details .details-body{
 }
 @media(min-width:600px){
   .outfit{
-    grid-template-columns:repeat(3,1fr);
+    grid-template-columns:repeat(4,1fr);
     gap:8px;
   }
   .piece{
@@ -356,6 +356,53 @@ details .details-body{
   .piece .name{margin-top:4px}
   .actions{grid-template-columns:1fr 1fr}
 }
+
+.daily-options{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:12px;
+  margin-top:14px;
+}
+.daily-option{
+  border:1px solid var(--line);
+  background:rgba(255,255,255,.08);
+  border-radius:4px;
+  padding:13px;
+}
+.daily-option.featured{
+  border-color:var(--line-2);
+  box-shadow:inset 0 0 0 1px rgba(171,145,92,.28);
+}
+.option-label{
+  font-family:"Marcellus SC", Georgia, serif;
+  color:var(--green);
+  font-size:17px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+}
+.option-note{
+  color:var(--muted);
+  font-size:12px;
+  margin:2px 0 7px;
+}
+.daily-option .why{
+  margin-top:8px;
+  font-size:12px;
+}
+@media(min-width:700px){
+  .daily-options{grid-template-columns:repeat(3,1fr)}
+  .daily-option .mini-outfit{grid-template-columns:1fr}
+  .daily-option .piece{
+    display:block;
+    border-top:1px solid var(--line);
+    border-left:0;border-right:0;border-bottom:0;
+    border-radius:0;
+    padding:8px 0;
+    background:transparent;
+  }
+  .daily-option .piece:first-child{border-top:0}
+}
+
 </style>
 </head>
 <body>
@@ -410,19 +457,50 @@ details .details-body{
       <option value="polished">More polished</option>
       <option value="casual">Casual workday</option>
     </select>
-    <button id="generateBtn" type="button">Generate outfit</button>
+    <button id="generateBtn" type="button">Generate 3 outfits</button>
 
     <div id="outfitResult" class="hidden">
-      <div class="outfit">
-        <div class="piece"><div class="type">Pants</div><div id="pantsOut" class="name"></div></div>
-        <div class="piece"><div class="type">Top</div><div id="topOut" class="name"></div></div>
-        <div class="piece"><div class="type">Shoes</div><div id="shoesOut" class="name"></div></div>
+      <div class="daily-options">
+        <div class="daily-option">
+          <div class="option-label">Practical / Comfortable</div>
+          <div class="option-note">Easy, weather-first, low-fuss.</div>
+          <div class="outfit mini-outfit">
+            <div class="piece"><div class="type">Pants</div><div id="practicalPants" class="name"></div></div>
+            <div class="piece"><div class="type">Top</div><div id="practicalTop" class="name"></div></div>
+            <div class="piece"><div class="type">Shoes</div><div id="practicalShoes" class="name"></div></div>
+            <div id="practicalOuterwearPiece" class="piece hidden"><div class="type">Optional layer</div><div id="practicalOuterwear" class="name"></div></div>
+          </div>
+          <div id="practicalWhy" class="why"></div>
+        </div>
+
+        <div class="daily-option featured">
+          <div class="option-label">Balanced</div>
+          <div class="option-note">Best all-around mix of style, office, and weather.</div>
+          <div class="outfit mini-outfit">
+            <div class="piece"><div class="type">Pants</div><div id="balancedPants" class="name"></div></div>
+            <div class="piece"><div class="type">Top</div><div id="balancedTop" class="name"></div></div>
+            <div class="piece"><div class="type">Shoes</div><div id="balancedShoes" class="name"></div></div>
+            <div id="balancedOuterwearPiece" class="piece hidden"><div class="type">Optional layer</div><div id="balancedOuterwear" class="name"></div></div>
+          </div>
+          <div id="balancedWhy" class="why"></div>
+        </div>
+
+        <div class="daily-option">
+          <div class="option-label">Style-forward</div>
+          <div class="option-note">More interesting texture, contrast, or layering.</div>
+          <div class="outfit mini-outfit">
+            <div class="piece"><div class="type">Pants</div><div id="stylePants" class="name"></div></div>
+            <div class="piece"><div class="type">Top</div><div id="styleTop" class="name"></div></div>
+            <div class="piece"><div class="type">Shoes</div><div id="styleShoes" class="name"></div></div>
+            <div id="styleOuterwearPiece" class="piece hidden"><div class="type">Optional layer</div><div id="styleOuterwear" class="name"></div></div>
+          </div>
+          <div id="styleWhy" class="why"></div>
+        </div>
       </div>
-      <div class="divider"></div>
-      <div id="whyOut" class="why"></div>
+
       <div class="actions">
-        <button id="anotherBtn" type="button" class="secondary">Another option</button>
-        <button id="skipBtn" type="button" class="skip">Don’t suggest this today</button>
+        <button id="anotherBtn" type="button" class="secondary">Refresh options</button>
+        <button id="skipBtn" type="button" class="skip">Don’t suggest balanced pick today</button>
       </div>
       <div id="skipStatus" class="small" aria-live="polite"></div>
     </div>
@@ -438,6 +516,7 @@ details .details-body{
           <option value="pants">Pants</option>
           <option value="tops">Top / sweater</option>
           <option value="shoes">Shoes</option>
+          <option value="outerwear">Outerwear</option>
         </select>
       </div>
       <div>
@@ -452,13 +531,14 @@ details .details-body{
   <details>
     <summary>How recommendations work</summary>
     <div class="details-body"><strong>Weather wins:</strong> choose Today or Tomorrow; the selected day’s temperature, feels-like temperature, forecast high and precipitation are the strongest inputs.
-      Sweaters are excluded at 65°F+ effective temperature, and the L.L.Bean Waterfowl sweater is reserved mostly for sub-50°F days.
+      The cream Hugo Boss quarter-zip is your lightest sweater and can appear into the mid-60s; heavier sweaters are held for cooler weather, and the L.L.Bean Waterfowl sweater is reserved mostly for sub-50°F days.
+      Outerwear is optional rather than part of every office outfit. The charcoal Canada Goose quilted liner is a high-priority winter workday layer for cold, mostly dry conditions or light rain when outdoor exposure is brief. The navy Barbour Ashby remains the preferred cool/wet fall-winter jacket, while the dark-brown UNIQLO blouson is the year-round mild-rain backup. The olive Loewe quilted jacket is a style-forward cool-weather option for mostly dry days. Warm, dry summer days generally get no jacket suggestion.
       Dark-brown cords are primarily October–March and are excluded in warmer weather.
       Rugby shirts are allowed when the forecast high is 72°F or lower.
       Your 28″ ABC pants are polo-first and Jordan-only—boots and Stan Smiths are excluded with them.
       Boots are completely excluded from May through September, and from October through April they are only considered when the effective temperature is below 65°F.
       The picker favors contrast (dark pants with lighter tops, khaki with darker tops), avoids overly brown combinations without separation, treats black dress Blundstones as the more polished boot and Tobacco #1911s as the more casual/rugged boot, and keeps jeans in casual-work territory.
-      The calendar month then nudges color, texture and footwear without overriding unusual weather. Every wardrobe item is included in the outfit engine; curated combinations are preferred, and compatible fallback combinations are generated automatically so Build Around an Item works for every piece.</div>
+      The calendar month then nudges color, texture and footwear without overriding unusual weather. Each generation returns three choices: Practical / Comfortable, Balanced, and Style-forward. All three obey the same hard weather and wardrobe rules, but each is scored differently so you can choose between ease, the best all-around option, or a more fashion-driven look. Every wardrobe item is included in the outfit engine; curated combinations are preferred, and compatible fallback combinations are generated automatically so Build Around an Item works for every piece.</div>
   </details>
 </div>
 
@@ -472,6 +552,7 @@ details .details-body{
   ];
 
   const sweaters = [
+    'Hugo Boss lightweight quarter-zip — Cream',
     'Marine Layer Inverness Crewneck — Oatmeal',
     'Lululemon Textured Knit Crewneck — Heathered Classic Navy',
     'Lululemon Textured Knit Crewneck — Rainforest Green',
@@ -480,20 +561,35 @@ details .details-body{
   ];
 
   const tops = [
-    'Pale-blue Oxford','Navy Oxford','Black Oxford','White/blue stripe Oxford',
+    'Pale blue/white striped Oxford','Navy Oxford','Black Oxford',
     'Green/white stripe Oxford','Heather-gray pique polo','Navy pique polo',
     'Black pique polo','J.Crew medium-wash denim shirt','Black J.Crew rugby',
-    'Espresso F&T rugby', ...sweaters
-  ];
+    'Espresso F&T rugby', ...sweaters,
+    'Banana Republic tan/white striped button-down'];
 
   const shoes = [
     'Off-white/gold Stan Smith','White/gray Jordan 1 Low','Black/white/mocha Jordan 1 Low',
     'Tobacco #1911 Blundstone','Black dress Blundstone'
   ];
 
+  const outerwear = [
+    'Barbour Ashby Wax Jacket — Navy',
+    'UNIQLO Windproof Stand Collar Blouson — Dark Brown',
+    'Filson All Season Waxed Rain Jacket — Root',
+    'Filson Hyder Quilted Jac-Shirt — Tan',
+    'Filson Ultralight Vest — Warm Tan/Teak',
+    'UNIQLO Bomber Jacket — Green',
+    'Madewell Denim Trucker Jacket — Black',
+    'Reigning Champ Wool Herringbone Scout Coat — Black/Grey',
+    'Outdoor Research Shadow Insulated Hooded Jacket',
+    'Patagonia Nano Puff — Black',
+    'Patagonia Down Sweater Jacket — Cool Grey / Navy Zipper',
+    'Canada Goose quilted liner jacket — Charcoal/Black',
+    'Loewe quilted jacket — Olive / Brown Corduroy Collar'];
+
   const outfits = [
-    ['Chocolate 365','Pale-blue Oxford','Off-white/gold Stan Smith','polished'],
-    ['Chocolate 365','Pale-blue Oxford','Tobacco #1911 Blundstone','polished'],
+    ['Chocolate 365','Pale blue/white striped Oxford','Off-white/gold Stan Smith','polished'],
+    ['Chocolate 365','Pale blue/white striped Oxford','Tobacco #1911 Blundstone','polished'],
     ['Chocolate 365','Navy Oxford','Tobacco #1911 Blundstone','polished'],
     ['Chocolate 365','Heather-gray pique polo','Off-white/gold Stan Smith','casual'],
     ['Chocolate 365','Heather-gray pique polo','Tobacco #1911 Blundstone','casual'],
@@ -503,8 +599,8 @@ details .details-body{
     ['Chocolate 365','Lululemon Textured Knit Crewneck — Heathered Classic Navy','Tobacco #1911 Blundstone','casual'],
     ['Chocolate 365','Lululemon Textured Knit Crewneck — Heathered Black/Charcoal','Black dress Blundstone','casual'],
 
-    ['Navy 365','Pale-blue Oxford','Off-white/gold Stan Smith','polished'],
-    ['Navy 365','Pale-blue Oxford','Black dress Blundstone','polished'],
+    ['Navy 365','Pale blue/white striped Oxford','Off-white/gold Stan Smith','polished'],
+    ['Navy 365','Pale blue/white striped Oxford','Black dress Blundstone','polished'],
     ['Navy 365','Green/white stripe Oxford','White/gray Jordan 1 Low','polished'],
     ['Navy 365','Heather-gray pique polo','Off-white/gold Stan Smith','casual'],
     ['Navy 365','Heather-gray pique polo','Black dress Blundstone','casual'],
@@ -515,7 +611,7 @@ details .details-body{
 
     ['Khaki 365','Navy Oxford','Off-white/gold Stan Smith','polished'],
     ['Khaki 365','Navy Oxford','Tobacco #1911 Blundstone','polished'],
-    ['Khaki 365','Pale-blue Oxford','White/gray Jordan 1 Low','polished'],
+    ['Khaki 365','Pale blue/white striped Oxford','White/gray Jordan 1 Low','polished'],
     ['Khaki 365','Navy pique polo','White/gray Jordan 1 Low','casual'],
     ['Khaki 365','Navy pique polo','Tobacco #1911 Blundstone','casual'],
     ['Khaki 365','Black pique polo','Black/white/mocha Jordan 1 Low','casual'],
@@ -524,8 +620,8 @@ details .details-body{
     ['Khaki 365','Lululemon Textured Knit Crewneck — Heathered Classic Navy','Tobacco #1911 Blundstone','casual'],
     ['Khaki 365','Lululemon Textured Knit Crewneck — Heathered Black/Charcoal','Black dress Blundstone','casual'],
 
-    ['Black 365','Pale-blue Oxford','White/gray Jordan 1 Low','polished'],
-    ['Black 365','Pale-blue Oxford','Black dress Blundstone','polished'],
+    ['Black 365','Pale blue/white striped Oxford','White/gray Jordan 1 Low','polished'],
+    ['Black 365','Pale blue/white striped Oxford','Black dress Blundstone','polished'],
     ['Black 365','Heather-gray pique polo','Black/white/mocha Jordan 1 Low','casual'],
     ['Black 365','Heather-gray pique polo','Black dress Blundstone','casual'],
     ['Black 365','J.Crew medium-wash denim shirt','White/gray Jordan 1 Low','casual'],
@@ -533,7 +629,7 @@ details .details-body{
     ['Black 365','Lululemon Textured Knit Crewneck — Heathered Classic Navy','Black dress Blundstone','casual'],
     ['Black 365','Lululemon Textured Knit Crewneck — Rainforest Green','Black dress Blundstone','casual'],
 
-    ['Marine Layer Flex Terry Cords — Dark Brown','Pale-blue Oxford','Tobacco #1911 Blundstone','polished'],
+    ['Marine Layer Flex Terry Cords — Dark Brown','Pale blue/white striped Oxford','Tobacco #1911 Blundstone','polished'],
     ['Marine Layer Flex Terry Cords — Dark Brown','Navy Oxford','Tobacco #1911 Blundstone','polished'],
     ['Marine Layer Flex Terry Cords — Dark Brown','Heather-gray pique polo','Tobacco #1911 Blundstone','casual'],
     ['Marine Layer Flex Terry Cords — Dark Brown','Marine Layer Inverness Crewneck — Oatmeal','Tobacco #1911 Blundstone','polished'],
@@ -549,8 +645,8 @@ details .details-body{
     ['Navy ABC 28″','Black pique polo','White/gray Jordan 1 Low','casual'],
     ['Navy ABC 28″','Black pique polo','Black dress Blundstone','casual'],
 
-    ['F&T medium/dark athletic-taper jeans','Pale-blue Oxford','White/gray Jordan 1 Low','casual'],
-    ['F&T medium/dark athletic-taper jeans','Pale-blue Oxford','Tobacco #1911 Blundstone','casual'],
+    ['F&T medium/dark athletic-taper jeans','Pale blue/white striped Oxford','White/gray Jordan 1 Low','casual'],
+    ['F&T medium/dark athletic-taper jeans','Pale blue/white striped Oxford','Tobacco #1911 Blundstone','casual'],
     ['F&T medium/dark athletic-taper jeans','Espresso F&T rugby','Tobacco #1911 Blundstone','casual'],
     ['F&T medium/dark athletic-taper jeans','Marine Layer Inverness Crewneck — Oatmeal','Tobacco #1911 Blundstone','casual'],
     ['F&T medium/dark athletic-taper jeans','Lululemon Textured Knit Crewneck — Rainforest Green','Tobacco #1911 Blundstone','casual'],
@@ -566,6 +662,18 @@ details .details-body{
     ['Black slim denim','Marine Layer Inverness Crewneck — Oatmeal','Black dress Blundstone','casual'],
     ['Black slim denim','Lululemon Textured Knit Crewneck — Rainforest Green','Black dress Blundstone','casual'],
     ['Black slim denim','L.L.Bean Waterfowl Sweater — Dark Cinder','Black dress Blundstone','casual'],
+
+
+    ['Chocolate 365','Hugo Boss lightweight quarter-zip — Cream','Tobacco #1911 Blundstone','polished'],
+    ['Navy 365','Hugo Boss lightweight quarter-zip — Cream','Black dress Blundstone','polished'],
+    ['Khaki 365','Hugo Boss lightweight quarter-zip — Cream','White/gray Jordan 1 Low','polished'],
+    ['Black 365','Hugo Boss lightweight quarter-zip — Cream','Black/white/mocha Jordan 1 Low','polished'],
+    ['F&T medium/dark athletic-taper jeans','Hugo Boss lightweight quarter-zip — Cream','Tobacco #1911 Blundstone','casual'],
+
+    ['Navy 365','Banana Republic tan/white striped button-down','Off-white/gold Stan Smith','polished'],
+    ['Chocolate 365','Banana Republic tan/white striped button-down','White/gray Jordan 1 Low','polished'],
+    ['Khaki 365','Banana Republic tan/white striped button-down','Black/white/mocha Jordan 1 Low','polished'],
+    ['F&T medium/dark athletic-taper jeans','Banana Republic tan/white striped button-down','Tobacco #1911 Blundstone','casual'],
 
     ['Chocolate 365','L.L.Bean Waterfowl Sweater — Dark Cinder','Tobacco #1911 Blundstone','casual'],
     ['Khaki 365','L.L.Bean Waterfowl Sweater — Dark Cinder','Tobacco #1911 Blundstone','casual'],
@@ -697,8 +805,9 @@ details .details-body{
     // HARD RULE: Outside May-Sep, boots only enter below 65°F effective temp.
     if (isBoot && t >= 65) return false;
 
-    // Sweater ceiling.
-    if (isSweater(top) && t >= 65) return false;
+    // Sweater ceilings. The Boss quarter-zip is the lightest sweater.
+    if (top.includes('Hugo Boss') && t >= 67) return false;
+    if (isSweater(top) && !top.includes('Hugo Boss') && t >= 65) return false;
     if (top.includes('Waterfowl') && t >= 50) return false;
 
     // Cords are cool-weather and seasonal.
@@ -767,6 +876,7 @@ details .details-body{
       if (isStan || isJordan) s += 4;
       if (top.includes('Oxford') || top.includes('polo')) s += 3;
       if (isSweater(top) && t <= 61) s += 4;
+      if (top.includes('Hugo Boss') && t >= 55 && t < 67) s += 3;
       if (isRugby && high <= 72) s += 2.5;
     } else if (cls === 'warm-dry') {
       if (isStan) s += 7;
@@ -787,6 +897,13 @@ details .details-body{
     if (bias.includes('spring') || bias === 'summer') {
       if (isStan || isJordan) s += 2;
       if (top.includes('stripe') || top.includes('Pale-blue') || top.includes('polo')) s += 1;
+    }
+
+    // Warm neutral Banana Republic stripe.
+    if (top.includes('Banana Republic tan/white striped')) {
+      if (pant.includes('Navy') || pant.includes('Chocolate') || pant.includes('Khaki') ||
+          pant.includes('Green') || isJean) s += 3;
+      if (isTobaccoBoot || isStan || isJordan) s += 1.5;
     }
 
     // CONTRAST RULES.
@@ -827,6 +944,175 @@ details .details-body{
     return s;
   }
 
+
+  function rainExpected(){
+    return !!wx && (wx.precip >= 0.03 || (wx.rainChance || 0) >= 35);
+  }
+
+  function outerwearNeeded(){
+    if (!wx) return false;
+    const month = new Date().getMonth() + 1;
+    const t = effectiveTemp();
+    const high = wx.high;
+
+    // Rain always triggers an outerwear suggestion.
+    if (rainExpected()) return true;
+
+    // Dry warm season: usually no jacket for an office day.
+    if (month >= 5 && month <= 8) return false;
+
+    // Fall / winter: suggest only when it is meaningfully cool.
+    if (month >= 9 || month <= 2) return t <= 60 || high <= 64;
+
+    // Early spring: optional only when genuinely cool.
+    if (month === 3 || month === 4) return t <= 55 || high <= 60;
+
+    return false;
+  }
+
+  function outerwearScore(layer, outfit){
+    const [pant, top, shoe, dress] = outfit;
+    const t = effectiveTemp();
+    const high = wx ? wx.high : t;
+    const month = new Date().getMonth() + 1;
+    const rain = rainExpected();
+    const fallWinter = month >= 9 || month <= 2;
+    const polished = dress === 'polished';
+    const warmColors = pant.includes('Chocolate') || pant.includes('Khaki') || pant.includes('Green') ||
+                       top.includes('Cream') || top.includes('Oatmeal') || top.includes('Espresso');
+    const darkOutfit = pant.includes('Black') || pant.includes('Navy') ||
+                       top.includes('Black') || top.includes('Navy') || top.includes('Charcoal');
+
+    let s = Math.random();
+
+    if (layer.includes('Barbour Ashby')) {
+      if (rain) s += 14;
+      if (fallWinter) s += 8;
+      if (t <= 62) s += 5;
+      if (pant.includes('Chocolate') || pant.includes('Khaki') || pant.includes('Green') || pant.includes('jeans')) s += 3;
+      // User's default fall/winter jacket.
+      s += fallWinter ? 5 : 1;
+    }
+
+    if (layer.includes('UNIQLO Windproof Stand Collar Blouson')) {
+      if (rain) s += 10;
+      if (t >= 52) s += 5;
+      if (month >= 5 && month <= 8) s += rain ? 8 : -6;
+      if (darkOutfit) s += 1;
+    }
+
+    if (layer.includes('Filson All Season Waxed Rain Jacket')) {
+      if (rain) s += 11;
+      if (t <= 62) s += 3;
+      if (warmColors) s += 4;
+      if (pant.includes('denim') || pant.includes('jeans') || pant.includes('Khaki') || pant.includes('Chocolate')) s += 2;
+    }
+
+    if (layer.includes('Filson Hyder')) {
+      if (!rain && t <= 56) s += 8;
+      if (rain) s += 2;
+      if (warmColors) s += 3;
+    }
+
+    if (layer.includes('Filson Ultralight Vest')) {
+      if (!rain && t >= 48 && t <= 63) s += 8;
+      if (rain) s -= 8;
+      if (warmColors || pant.includes('Navy')) s += 2;
+    }
+
+    if (layer.includes('UNIQLO Bomber')) {
+      if (!rain && t >= 50 && t <= 62) s += 7;
+      if (rain) s -= 4;
+      if (pant.includes('Black') || pant.includes('Navy') || pant.includes('jeans')) s += 2;
+    }
+
+    if (layer.includes('Madewell Denim Trucker')) {
+      if (!rain && t >= 50 && t <= 62) s += 6;
+      if (rain) s -= 5;
+      if (!pant.includes('Black slim denim')) s += 1;
+    }
+
+    if (layer.includes('Reigning Champ Wool Herringbone')) {
+      if (!rain && t <= 50) s += 10;
+      if (polished) s += 6;
+      if (rain) s -= 3;
+    }
+
+    if (layer.includes('Canada Goose quilted liner')) {
+      if (t <= 52) s += 12;
+      if (fallWinter) s += 7;
+      if (!rain || (wx && wx.precip < 0.15)) s += 5;
+      if (rain && wx && wx.precip < 0.15) s += 1;
+      if (pant.includes('Navy') || pant.includes('Black') || pant.includes('Khaki') || isJean) s += 2;
+    }
+
+    if (layer.includes('Loewe quilted jacket')) {
+      if (!rain && t >= 44 && t <= 58) s += 10;
+      if (fallWinter) s += 4;
+      if (pant.includes('Navy') || pant.includes('Khaki') || pant.includes('Chocolate') || isJean) s += 3;
+      if (isTobaccoBoot) s += 2;
+      if (rain) s -= 3;
+    }
+
+    if (layer.includes('Outdoor Research Shadow')) {
+      if (t <= 46) s += 10;
+      if (rain && t <= 50) s += 6;
+    }
+
+    if (layer.includes('Patagonia Nano Puff')) {
+      if (t <= 48) s += 9;
+      if (rain) s += 1;
+    }
+
+    if (layer.includes('Patagonia Down Sweater')) {
+      if (t <= 42) s += 11;
+      if (rain) s -= 2;
+    }
+
+    // Avoid unnecessary technical/heavy layers in mild weather.
+    if (high >= 62 && (
+      layer.includes('Outdoor Research') ||
+      layer.includes('Nano Puff') ||
+      layer.includes('Down Sweater') ||
+      layer.includes('Wool Herringbone')
+    )) s -= 10;
+
+    return s;
+  }
+
+  function compatibleOuterwear(layer, outfit){
+    if (!wx) return true;
+    const t = effectiveTemp();
+    const high = wx.high;
+    const rain = rainExpected();
+
+    if (layer.includes('Canada Goose quilted liner') && rain && wx.precip >= 0.15) return false;
+    if (layer.includes('Loewe quilted jacket') && rain && wx.precip >= 0.10) return false;
+        if (layer.includes('Filson Ultralight Vest') && rain) return false;
+    if (layer.includes('Madewell Denim Trucker') && rain) return false;
+    if (layer.includes('UNIQLO Bomber') && rain && wx.precip >= 0.10) return false;
+
+    if (layer.includes('Wool Herringbone') && high > 56) return false;
+    if (layer.includes('Outdoor Research Shadow') && high > 55) return false;
+    if (layer.includes('Patagonia Down Sweater') && high > 50) return false;
+    if (layer.includes('Patagonia Nano Puff') && high > 56) return false;
+    if (layer.includes('Filson Hyder') && high > 62) return false;
+
+    return true;
+  }
+
+  function chooseOuterwear(outfit, forcedLayer=null){
+    if (forcedLayer) return compatibleOuterwear(forcedLayer, outfit) ? forcedLayer : null;
+    if (!outerwearNeeded()) return null;
+
+    const pool = outerwear
+      .filter(layer => compatibleOuterwear(layer, outfit))
+      .map(layer => ({layer, s:outerwearScore(layer, outfit)}))
+      .sort((a,b)=>b.s-a.s);
+
+    return pool.length ? pool[0].layer : null;
+  }
+
   function reason(o){
     const [pant, top, shoe] = o;
     const t = Math.round(effectiveTemp());
@@ -839,6 +1125,13 @@ details .details-body{
     else if (shoe.includes('Stan Smith')) text += 'Dry, milder weather favors the lighter Stan Smith. ';
     else text += 'The Jordan 1 keeps this relaxed while fitting the weather. ';
     if (pant.includes('ABC')) text += 'ABC pants are polo-first and paired only with Jordan 1s, which keeps the shorter inseam better proportioned. ';
+    const layer = chooseOuterwear(o);
+    if (layer) {
+      if (rainExpected()) text += `${layer} is added as an optional outer layer because rain is in the forecast. `;
+      else text += `${layer} is an optional layer for the cooler conditions. `;
+    } else {
+      text += 'No outer layer is necessary for the forecast. ';
+    }
     text += `The ${seasonBias()} calendar season only provides a secondary style nudge.`;
     return text;
   }
@@ -851,43 +1144,121 @@ details .details-body{
     return pool;
   }
 
-  function chooseOutfit(){
-    const pool = filteredPool().map(o => ({o, s:score(o)})).sort((a,b)=>b.s-a.s);
-    const shortlist = pool.slice(0, Math.min(10, pool.length));
-    if (!shortlist.length) return null;
-    let pick = shortlist[Math.floor(Math.random()*shortlist.length)].o;
-    if (shortlist.length > 1 && lastPick && key(pick) === key(lastPick)) {
-      const alt = shortlist.find(x => key(x.o) !== key(lastPick));
-      if (alt) pick = alt.o;
-    }
-    return pick;
+  function practicalScore(o){
+    const [pant, top, shoe] = o;
+    let s = score(o);
+    if (pant.includes('365') || pant.includes('ABC')) s += 3;
+    if (top.includes('polo') || top.includes('Hugo Boss') || top.includes('Oxford') || top.includes('button-down')) s += 2.5;
+    if (shoe.includes('Jordan') || shoe.includes('Stan Smith') || shoe.includes('Black dress Blundstone')) s += 1.5;
+    if (rainExpected() && chooseOuterwear(o)) s += 5;
+    if (weatherClass().includes('cold') && isSweater(top)) s += 3;
+    if (top.includes('rugby')) s -= 1;
+    if (pant.includes('Cords')) s -= .5;
+    return s;
   }
 
-  function showOutfit(pick){
-    if (!pick) {
-      $('skipStatus').textContent = 'No more saved outfits match today’s filters.';
-      return;
-    }
-    lastPick = pick;
-    $('pantsOut').textContent = pick[0];
-    $('topOut').textContent = pick[1];
-    $('shoesOut').textContent = pick[2];
-    $('whyOut').textContent = reason(pick);
-    $('outfitResult').classList.remove('hidden');
+  function balancedScore(o){
+    return score(o);
   }
+
+  function styleForwardScore(o){
+    const [pant, top, shoe] = o;
+    let s = score(o);
+    if (pant.includes('Cords')) s += 5;
+    if (top.includes('rugby')) s += 4;
+    if (top.includes('Banana Republic tan/white striped')) s += 3;
+    if (top.includes('Hugo Boss')) s += 2;
+    if (top.includes('Oatmeal') || top.includes('Rainforest Green') || top.includes('Espresso')) s += 2;
+    if (shoe.includes('Tobacco')) s += 2;
+    if (shoe.includes('Black/white/mocha')) s += 1.5;
+
+    const layer = chooseOuterwear(o);
+    if (layer) {
+      if (layer.includes('Loewe')) s += 6;
+      if (layer.includes('Barbour')) s += 3;
+      if (layer.includes('Filson All Season Waxed')) s += 3;
+      if (layer.includes('Filson Hyder')) s += 2.5;
+      if (layer.includes('Wool Herringbone')) s += 4;
+    }
+    return s;
+  }
+
+  function chooseProfileOutfit(pool, scorer, usedKeys, usedPieces, diversityStrength=1){
+    const ranked = pool.map(o => {
+      let s = scorer(o);
+      if (usedPieces.pants.has(o[0])) s -= 3 * diversityStrength;
+      if (usedPieces.tops.has(o[1])) s -= 4 * diversityStrength;
+      if (usedPieces.shoes.has(o[2])) s -= 2.5 * diversityStrength;
+      if (usedKeys.has(key(o))) s -= 100;
+      return {o, s};
+    }).sort((a,b)=>b.s-a.s);
+
+    const shortlist = ranked.slice(0, Math.min(5, ranked.length));
+    if (!shortlist.length) return null;
+    return shortlist[Math.floor(Math.random() * shortlist.length)].o;
+  }
+
+  function renderProfile(prefix, outfit){
+    if (!outfit) return;
+    $(prefix+'Pants').textContent = outfit[0];
+    $(prefix+'Top').textContent = outfit[1];
+    $(prefix+'Shoes').textContent = outfit[2];
+
+    const layer = chooseOuterwear(outfit);
+    if (layer) {
+      $(prefix+'Outerwear').textContent = layer;
+      $(prefix+'OuterwearPiece').classList.remove('hidden');
+    } else {
+      $(prefix+'Outerwear').textContent = '';
+      $(prefix+'OuterwearPiece').classList.add('hidden');
+    }
+    $(prefix+'Why').textContent = reason(outfit);
+  }
+
   function generate(){
     $('skipStatus').textContent = '';
-    showOutfit(chooseOutfit());
+    const pool = filteredPool();
+    if (!pool.length) {
+      $('outfitResult').classList.add('hidden');
+      return;
+    }
+
+    const usedKeys = new Set();
+    const usedPieces = {pants:new Set(), tops:new Set(), shoes:new Set()};
+
+    const practical = chooseProfileOutfit(pool, practicalScore, usedKeys, usedPieces, .7);
+    if (practical) {
+      usedKeys.add(key(practical)); usedPieces.pants.add(practical[0]);
+      usedPieces.tops.add(practical[1]); usedPieces.shoes.add(practical[2]);
+    }
+
+    const balanced = chooseProfileOutfit(pool, balancedScore, usedKeys, usedPieces, 1);
+    if (balanced) {
+      usedKeys.add(key(balanced)); usedPieces.pants.add(balanced[0]);
+      usedPieces.tops.add(balanced[1]); usedPieces.shoes.add(balanced[2]);
+    }
+
+    const style = chooseProfileOutfit(pool, styleForwardScore, usedKeys, usedPieces, 1.25);
+
+    lastPick = balanced || practical || style;
+
+    renderProfile('practical', practical || balanced || style);
+    renderProfile('balanced', balanced || practical || style);
+    renderProfile('style', style || balanced || practical);
+    $('outfitResult').classList.remove('hidden');
   }
+
   function skipToday(){
     if(!lastPick) return;
     skippedToday.add(key(lastPick));
-    $('skipStatus').textContent = `Skipped for today. ${skippedToday.size} outfit${skippedToday.size===1?'':'s'} excluded this session.`;
-    showOutfit(chooseOutfit());
+    $('skipStatus').textContent = `Balanced pick skipped for today. ${skippedToday.size} outfit${skippedToday.size===1?'':'s'} excluded this session.`;
+    generate();
   }
 
   function refreshItems(){
-    const list = $('category').value === 'pants' ? pants : $('category').value === 'tops' ? tops : shoes;
+    const list = $('category').value === 'pants' ? pants :
+                 $('category').value === 'tops' ? tops :
+                 $('category').value === 'shoes' ? shoes : outerwear;
     $('item').innerHTML = '';
     list.forEach(v => {
       const opt = document.createElement('option');
@@ -896,53 +1267,67 @@ details .details-body{
   }
 
   function buildAround(){
-    const idx = $('category').value === 'pants' ? 0 : $('category').value === 'tops' ? 1 : 2;
+    const category = $('category').value;
     const chosen = $('item').value;
 
-    let pool = allCandidateOutfits().filter(o => o[idx] === chosen && compatible(o));
+    let pool;
 
-    // If weather is so restrictive that nothing survives, keep all hard wardrobe rules
-    // but relax weather-only filtering enough to still show usable combinations.
-    if (!pool.length) {
-      pool = allCandidateOutfits().filter(o => {
-        if (o[idx] !== chosen || skippedToday.has(key(o))) return false;
-        const [pant, top, shoe] = o;
-        if (!basePairingOkay(pant, top, shoe)) return false;
+    if (category === 'outerwear') {
+      // Build base outfits that make sense with the selected layer.
+      pool = allCandidateOutfits()
+        .filter(compatible)
+        .filter(o => compatibleOuterwear(chosen, o))
+        .map(o => ({o, s:score(o) + outerwearScore(chosen, o)}))
+        .sort((a,b)=>b.s-a.s)
+        .slice(0,10)
+        .map(x=>x.o);
+    } else {
+      const idx = category === 'pants' ? 0 : category === 'tops' ? 1 : 2;
+      pool = allCandidateOutfits().filter(o => o[idx] === chosen && compatible(o));
 
-        const month = new Date().getMonth() + 1;
-        const t = effectiveTemp();
-        const high = wx ? wx.high : t;
-        const isBoot = shoe.includes('Blundstone');
+      if (!pool.length) {
+        pool = allCandidateOutfits().filter(o => {
+          if (o[idx] !== chosen || skippedToday.has(key(o))) return false;
+          const [pant, top, shoe] = o;
+          if (!basePairingOkay(pant, top, shoe)) return false;
 
-        if (pant.includes('ABC') && !shoe.includes('Jordan 1')) return false;
-        if (pant.includes('ABC') && !top.includes('polo')) return false;
-        if (isBoot && month >= 5 && month <= 9) return false;
-        if (isBoot && t >= 65) return false;
-        if (isSweater(top) && t >= 65) return false;
-        if (top.includes('Waterfowl') && t >= 50) return false;
-        if (pant.includes('Flex Terry Cords') && (month < 10 && month > 3)) return false;
-        if (top.includes('rugby') && high > 72) return false;
-        return true;
-      });
+          const month = new Date().getMonth() + 1;
+          const t = effectiveTemp();
+          const high = wx ? wx.high : t;
+          const isBoot = shoe.includes('Blundstone');
+
+          if (pant.includes('ABC') && !shoe.includes('Jordan 1')) return false;
+          if (pant.includes('ABC') && !top.includes('polo')) return false;
+          if (isBoot && month >= 5 && month <= 9) return false;
+          if (isBoot && t >= 65) return false;
+          if (top.includes('Hugo Boss') && t >= 67) return false;
+          if (isSweater(top) && !top.includes('Hugo Boss') && t >= 65) return false;
+          if (top.includes('Waterfowl') && t >= 50) return false;
+          if (pant.includes('Flex Terry Cords') && (month < 10 && month > 3)) return false;
+          if (top.includes('rugby') && high > 72) return false;
+          return true;
+        });
+      }
+
+      pool = pool
+        .map(o=>({o,s:score(o)}))
+        .sort((a,b)=>b.s-a.s)
+        .slice(0,10)
+        .map(x=>x.o);
     }
-
-    pool = pool
-      .map(o=>({o,s:score(o)}))
-      .sort((a,b)=>b.s-a.s)
-      .slice(0,10)
-      .map(x=>x.o);
 
     $('buildResults').innerHTML = '';
 
     if(!pool.length){
-      $('buildResults').innerHTML = '<div class="small">No outfit is available for that item under today’s hard wardrobe rules.</div>';
+      $('buildResults').innerHTML = '<div class="small">No outfit is available for that item under the current hard wardrobe and weather rules.</div>';
       return;
     }
 
     pool.forEach((o,i)=>{
       const div=document.createElement('div');
       div.className='option';
-      div.innerHTML=`<strong>Option ${i+1}</strong><div>${o[0]}</div><div>${o[1]}</div><div>${o[2]}</div>`;
+      const layer = category === 'outerwear' ? chosen : chooseOuterwear(o);
+      div.innerHTML=`<strong>Option ${i+1}</strong><div>${o[0]}</div><div>${o[1]}</div><div>${o[2]}</div>${layer ? `<div><em>Optional layer:</em> ${layer}</div>` : ''}`;
       $('buildResults').appendChild(div);
     });
   }
@@ -1009,10 +1394,16 @@ details .details-body{
       feels = dayFeels.length ? dayFeels[Math.floor(dayFeels.length / 2)] : temp;
     }
 
+    const dayRainChances = hourlyIndices
+      .map(i => data.hourly.precipitation_probability[i])
+      .filter(v => Number.isFinite(v));
+    const rainChance = dayRainChances.length ? Math.max(...dayRainChances) : 0;
+
     wx={
       temp,
       feels,
       precip:data.daily.precipitation_sum[dayOffset] || 0,
+      rainChance,
       high:data.daily.temperature_2m_max[dayOffset],
       low:data.daily.temperature_2m_min[dayOffset],
       code:data.daily.weather_code[dayOffset],
@@ -1026,7 +1417,9 @@ details .details-body{
     $('rain').textContent=`${wx.precip.toFixed(2)} in`;
     $('highlow').textContent=`${Math.round(wx.high)}° / ${Math.round(wx.low)}°`;
     $('locationWeatherTitle').textContent=`${currentLocation} · ${dayOffset === 1 ? 'Tomorrow' : 'Today'}`;
-    const rainText = wx.precip >= 0.15 ? `${wx.precip.toFixed(2)} in rain` : 'Dry';
+    const rainText = (wx.precip >= 0.03 || wx.rainChance >= 35)
+      ? `${Math.round(wx.rainChance)}% rain`
+      : 'Dry';
     $('weatherSummary').textContent=`High ${Math.round(wx.high)}° · Low ${Math.round(wx.low)}° · ${rainText}`;
     $('locationBadge').textContent=`${currentLocation} · ${dayOffset === 1 ? 'Tomorrow' : 'Today'}`;
     $('seasonBadge').textContent=`Month bias: ${seasonBias()}`;
