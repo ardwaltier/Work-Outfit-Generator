@@ -403,6 +403,11 @@ details .details-body{
   .daily-option .piece:first-child{border-top:0}
 }
 
+
+.wore-row{display:grid;grid-template-columns:1fr;gap:6px;margin-top:10px}
+button.wore{background:transparent;color:var(--green);border-color:var(--line-2);text-transform:none;letter-spacing:.01em;padding:9px 11px}
+button.wore:hover{background:var(--green-soft)}
+.wear-status{color:var(--muted);font-size:11px;min-height:16px}
 </style>
 </head>
 <body>
@@ -471,6 +476,10 @@ details .details-body{
             <div id="practicalOuterwearPiece" class="piece hidden"><div class="type">Optional layer</div><div id="practicalOuterwear" class="name"></div></div>
           </div>
           <div id="practicalWhy" class="why"></div>
+            <div class="wore-row">
+              <button id="practicalWoreBtn" type="button" class="wore">I wore this</button>
+              <div id="practicalWearStatus" class="wear-status" aria-live="polite"></div>
+            </div>
         </div>
 
         <div class="daily-option featured">
@@ -483,6 +492,10 @@ details .details-body{
             <div id="balancedOuterwearPiece" class="piece hidden"><div class="type">Optional layer</div><div id="balancedOuterwear" class="name"></div></div>
           </div>
           <div id="balancedWhy" class="why"></div>
+            <div class="wore-row">
+              <button id="balancedWoreBtn" type="button" class="wore">I wore this</button>
+              <div id="balancedWearStatus" class="wear-status" aria-live="polite"></div>
+            </div>
         </div>
 
         <div class="daily-option">
@@ -495,6 +508,10 @@ details .details-body{
             <div id="styleOuterwearPiece" class="piece hidden"><div class="type">Optional layer</div><div id="styleOuterwear" class="name"></div></div>
           </div>
           <div id="styleWhy" class="why"></div>
+            <div class="wore-row">
+              <button id="styleWoreBtn" type="button" class="wore">I wore this</button>
+              <div id="styleWearStatus" class="wear-status" aria-live="polite"></div>
+            </div>
         </div>
       </div>
 
@@ -538,7 +555,7 @@ details .details-body{
       Your 28″ ABC pants are polo-first and Jordan-only—boots and Stan Smiths are excluded with them.
       Boots are completely excluded from May through September, and from October through April they are only considered when the effective temperature is below 65°F.
       The picker favors contrast (dark pants with lighter tops, khaki with darker tops), avoids overly brown combinations without separation, treats black dress Blundstones as the more polished boot and Tobacco #1911s as the more casual/rugged boot, and keeps jeans in casual-work territory.
-      The calendar month then nudges color, texture and footwear without overriding unusual weather. Each generation returns three choices: Practical / Comfortable, Balanced, and Style-forward. All three obey the same hard weather and wardrobe rules, but each is scored differently so you can choose between ease, the best all-around option, or a more fashion-driven look. Every wardrobe item is included in the outfit engine; curated combinations are preferred, and compatible fallback combinations are generated automatically so Build Around an Item works for every piece.</div>
+      The calendar month then nudges color, texture and footwear without overriding unusual weather. Each generation returns three choices: Practical / Comfortable, Balanced, and Style-forward. Tap “I wore this” on the outfit you actually chose; that top is then held out until it is in a later work week and at least 4 business days have passed between wears (for example, Friday → next Thursday). All three obey the same hard weather and wardrobe rules, but each is scored differently so you can choose between ease, the best all-around option, or a more fashion-driven look. The off-white On THE ROGER Clubhouse Pro is treated as the middle-ground neutral sneaker: more polished than the Jordans and sportier than the Stan Smiths. Every wardrobe item is included in the outfit engine; curated combinations are preferred, and compatible fallback combinations are generated automatically so Build Around an Item works for every piece.</div>
   </details>
 </div>
 
@@ -568,7 +585,7 @@ details .details-body{
     'Banana Republic tan/white striped button-down'];
 
   const shoes = [
-    'Off-white/gold Stan Smith','White/gray Jordan 1 Low','Black/white/mocha Jordan 1 Low',
+    'Off-white/gold Stan Smith','On THE ROGER Clubhouse Pro — Off-white','White/gray Jordan 1 Low','Black/white/mocha Jordan 1 Low',
     'Tobacco #1911 Blundstone','Black dress Blundstone'
   ];
 
@@ -670,6 +687,12 @@ details .details-body{
     ['Black 365','Hugo Boss lightweight quarter-zip — Cream','Black/white/mocha Jordan 1 Low','polished'],
     ['F&T medium/dark athletic-taper jeans','Hugo Boss lightweight quarter-zip — Cream','Tobacco #1911 Blundstone','casual'],
 
+    ['Navy 365','Banana Republic tan/white striped button-down','On THE ROGER Clubhouse Pro — Off-white','polished'],
+    ['Chocolate 365','Pale blue/white striped Oxford','On THE ROGER Clubhouse Pro — Off-white','polished'],
+    ['Khaki 365','Navy Oxford','On THE ROGER Clubhouse Pro — Off-white','polished'],
+    ['Black 365','Heather-gray long-sleeve pique polo','On THE ROGER Clubhouse Pro — Off-white','casual'],
+    ['F&T medium/dark athletic-taper jeans','Hugo Boss lightweight quarter-zip — Cream','On THE ROGER Clubhouse Pro — Off-white','casual'],
+
     ['Navy 365','Banana Republic tan/white striped button-down','Off-white/gold Stan Smith','polished'],
     ['Chocolate 365','Banana Republic tan/white striped button-down','White/gray Jordan 1 Low','polished'],
     ['Khaki 365','Banana Republic tan/white striped button-down','Black/white/mocha Jordan 1 Low','polished'],
@@ -683,6 +706,60 @@ details .details-body{
   let wx = null;
   let currentLocation = 'Bellevue, WA';
   let lastPick = null;
+  let currentDailyOptions = {practical:null, balanced:null, style:null};
+  const wearHistoryKey = 'outfitPickerWearHistoryV1';
+
+  function loadWearHistory(){
+    try { return JSON.parse(localStorage.getItem(wearHistoryKey) || '{}'); }
+    catch(e){ return {}; }
+  }
+  function saveWearHistory(h){ localStorage.setItem(wearHistoryKey, JSON.stringify(h)); }
+
+  function localDateString(date=new Date()){
+    const y=date.getFullYear(), m=String(date.getMonth()+1).padStart(2,'0'), d=String(date.getDate()).padStart(2,'0');
+    return `${y}-${m}-${d}`;
+  }
+  function parseLocalDate(s){
+    const [y,m,d]=s.split('-').map(Number);
+    return new Date(y,m-1,d,12,0,0,0);
+  }
+  function startOfWorkWeek(date){
+    const d=new Date(date), day=d.getDay(), offset=day===0?-6:1-day;
+    d.setDate(d.getDate()+offset); d.setHours(12,0,0,0); return d;
+  }
+  function businessDaysBetween(wearDate,candidateDate){
+    let count=0, cur=new Date(wearDate);
+    cur.setDate(cur.getDate()+1);
+    while(cur<candidateDate){
+      const day=cur.getDay();
+      if(day>=1 && day<=5) count++;
+      cur.setDate(cur.getDate()+1);
+    }
+    return count;
+  }
+  function topEligibleByWearHistory(top,candidateDate=new Date()){
+    const last=loadWearHistory()[top];
+    if(!last) return true;
+    const worn=parseLocalDate(last);
+    if(startOfWorkWeek(candidateDate)<=startOfWorkWeek(worn)) return false;
+    return businessDaysBetween(worn,candidateDate)>=4;
+  }
+  function nextEligibleDateForTop(top){
+    const last=loadWearHistory()[top];
+    if(!last) return null;
+    const worn=parseLocalDate(last), wornWeek=startOfWorkWeek(worn), d=new Date(worn);
+    d.setDate(d.getDate()+1);
+    for(let i=0;i<21;i++){
+      const dow=d.getDay();
+      if(dow>=1 && dow<=5 && startOfWorkWeek(d)>wornWeek && businessDaysBetween(worn,d)>=4) return new Date(d);
+      d.setDate(d.getDate()+1);
+    }
+    return null;
+  }
+  function formatShortDate(date){
+    return date.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
+  }
+
   const skippedToday = new Set();
   const $ = id => document.getElementById(id);
   const key = o => o.slice(0,3).join('||');
@@ -790,10 +867,13 @@ details .details-body{
     const isBoot = shoe.includes('Blundstone');
     const isJordan = shoe.includes('Jordan 1');
     const isStan = shoe.includes('Stan Smith');
+    const isOn = shoe.includes('THE ROGER Clubhouse Pro');
     const isABC = pant.includes('ABC');
     const isRugby = top.includes('rugby');
     const isCord = pant.includes('Flex Terry Cords');
     const isJean = pant.includes('jeans') || pant.includes('Levi') || pant.includes('denim');
+
+    if (!topEligibleByWearHistory(top, new Date())) return false;
 
     // HARD RULE: ABC pants are polo-first and Jordan-only.
     if (isABC && !top.includes('polo')) return false;
@@ -825,7 +905,7 @@ details .details-body{
 
     // Weather-based footwear constraints.
     if (cls === 'cold-wet' && !isBoot && !isABC) return false;
-    if (cls === 'mild-wet' && isStan) return false;
+    if (cls === 'mild-wet' && (isStan || isOn)) return false;
     if (cls === 'warm-dry' && isBoot) return false;
 
     return true;
@@ -844,6 +924,7 @@ details .details-body{
     const isTobaccoBoot = shoe.includes('Tobacco');
     const isJordan = shoe.includes('Jordan');
     const isStan = shoe.includes('Stan Smith');
+    const isOn = shoe.includes('THE ROGER Clubhouse Pro');
     const isABC = pant.includes('ABC');
     const isCord = pant.includes('Cords');
     const isJean = pant.includes('jeans') || pant.includes('Levi') || pant.includes('denim');
@@ -873,20 +954,23 @@ details .details-body{
       if (isRugby && high <= 72) s += 3;
       if (isCord) s += 4;
     } else if (cls === 'mild-dry') {
-      if (isStan || isJordan) s += 4;
+      if (isStan) s += 4.5;
+      if (isOn) s += 4;
+      if (isJordan) s += 3.5;
       if (top.includes('Oxford') || top.includes('polo')) s += 3;
       if (isSweater(top) && t <= 61) s += 4;
       if (top.includes('Hugo Boss') && t >= 55 && t < 67) s += 3;
       if (isRugby && high <= 72) s += 2.5;
     } else if (cls === 'warm-dry') {
       if (isStan) s += 7;
+      if (isOn) s += 6.5;
       if (isJordan) s += 6;
       if (top.includes('polo')) s += 5;
       if (top.includes('Oxford')) s += 2;
     }
 
     // Warm-weather sneaker priority.
-    if (t >= 68 && (isStan || isJordan)) s += 4;
+    if (t >= 68 && (isStan || isOn || isJordan)) s += 4;
 
     // MONTH / SEASON: smaller bias.
     if (bias.includes('fall') || bias === 'winter') {
@@ -895,7 +979,7 @@ details .details-body{
       if (isSweater(top) || isRugby) s += 1.5;
     }
     if (bias.includes('spring') || bias === 'summer') {
-      if (isStan || isJordan) s += 2;
+      if (isStan || isOn || isJordan) s += 2;
       if (top.includes('stripe') || top.includes('Pale-blue') || top.includes('polo')) s += 1;
     }
 
@@ -903,14 +987,14 @@ details .details-body{
     if (top.includes('Banana Republic tan/white striped')) {
       if (pant.includes('Navy') || pant.includes('Chocolate') || pant.includes('Khaki') ||
           pant.includes('Green') || isJean) s += 3;
-      if (isTobaccoBoot || isStan || isJordan) s += 1.5;
+      if (isTobaccoBoot || isStan || isOn || isJordan) s += 1.5;
     }
 
     // CONTRAST RULES.
     if (darkPant && lightTop) s += 3;
     if (lightPant && darkTop) s += 3;
     if (darkPant && darkTop) {
-      if (isStan || shoe.includes('White/gray')) s += 2;
+      if (isStan || isOn || shoe.includes('White/gray')) s += 2;
       else s -= 2;
     }
 
@@ -1149,7 +1233,9 @@ details .details-body{
     let s = score(o);
     if (pant.includes('365') || pant.includes('ABC')) s += 3;
     if (top.includes('polo') || top.includes('Hugo Boss') || top.includes('Oxford') || top.includes('button-down')) s += 2.5;
-    if (shoe.includes('Jordan') || shoe.includes('Stan Smith') || shoe.includes('Black dress Blundstone')) s += 1.5;
+    if (shoe.includes('Stan Smith')) s += 1.7;
+    if (shoe.includes('THE ROGER Clubhouse Pro')) s += 1.6;
+    if (shoe.includes('Jordan') || shoe.includes('Black dress Blundstone')) s += 1.5;
     if (rainExpected() && chooseOuterwear(o)) s += 5;
     if (weatherClass().includes('cold') && isSweater(top)) s += 3;
     if (top.includes('rugby')) s -= 1;
@@ -1171,6 +1257,7 @@ details .details-body{
     if (top.includes('Oatmeal') || top.includes('Rainforest Green') || top.includes('Espresso')) s += 2;
     if (shoe.includes('Tobacco')) s += 2;
     if (shoe.includes('Black/white/mocha')) s += 1.5;
+    if (shoe.includes('THE ROGER Clubhouse Pro')) s += 1;
 
     const layer = chooseOuterwear(o);
     if (layer) {
@@ -1240,12 +1327,28 @@ details .details-body{
 
     const style = chooseProfileOutfit(pool, styleForwardScore, usedKeys, usedPieces, 1.25);
 
-    lastPick = balanced || practical || style;
+    currentDailyOptions.practical = practical || balanced || style;
+    currentDailyOptions.balanced = balanced || practical || style;
+    currentDailyOptions.style = style || balanced || practical;
+    lastPick = currentDailyOptions.balanced;
 
-    renderProfile('practical', practical || balanced || style);
-    renderProfile('balanced', balanced || practical || style);
-    renderProfile('style', style || balanced || practical);
+    renderProfile('practical', currentDailyOptions.practical);
+    renderProfile('balanced', currentDailyOptions.balanced);
+    renderProfile('style', currentDailyOptions.style);
     $('outfitResult').classList.remove('hidden');
+  }
+
+  function confirmWorn(profile){
+    const outfit=currentDailyOptions[profile];
+    if(!outfit) return;
+    const top=outfit[1], history=loadWearHistory();
+    history[top]=localDateString(new Date());
+    saveWearHistory(history);
+    const next=nextEligibleDateForTop(top);
+    $(profile+'WearStatus').textContent = next
+      ? `Marked worn. ${top} won’t be suggested again before ${formatShortDate(next)}.`
+      : `Marked worn. ${top} will be held out for the required rotation window.`;
+    setTimeout(generate,700);
   }
 
   function skipToday(){
@@ -1442,6 +1545,9 @@ details .details-body{
   $('generateBtn').addEventListener('click', generate);
   $('anotherBtn').addEventListener('click', generate);
   $('skipBtn').addEventListener('click', skipToday);
+  $('practicalWoreBtn').addEventListener('click', ()=>confirmWorn('practical'));
+  $('balancedWoreBtn').addEventListener('click', ()=>confirmWorn('balanced'));
+  $('styleWoreBtn').addEventListener('click', ()=>confirmWorn('style'));
   $('category').addEventListener('change', refreshItems);
   $('buildBtn').addEventListener('click', buildAround);
 
