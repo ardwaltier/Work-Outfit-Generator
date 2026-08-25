@@ -447,6 +447,50 @@ button.wore:hover{background:var(--green-soft)}
   .adjust-grid{grid-template-columns:1fr}
 }
 
+
+.recent-workwear{
+  display:grid;
+  grid-template-columns:1fr;
+  gap:8px;
+}
+.recent-day{
+  display:grid;
+  grid-template-columns:92px 1fr;
+  gap:12px;
+  padding:10px 0;
+  border-top:1px solid var(--line);
+}
+.recent-day:first-child{border-top:0}
+.recent-date{
+  font-family:"Marcellus SC", Georgia, serif;
+  color:var(--green);
+  font-size:12px;
+  letter-spacing:.04em;
+  line-height:1.35;
+}
+.recent-pieces{
+  display:flex;
+  flex-wrap:wrap;
+  gap:4px 9px;
+  font-size:12px;
+  line-height:1.45;
+}
+.recent-piece strong{
+  color:var(--muted);
+  font-size:10px;
+  text-transform:uppercase;
+  letter-spacing:.06em;
+  margin-right:3px;
+}
+.recent-empty{
+  color:var(--muted);
+  font-size:12px;
+  padding:8px 0 2px;
+}
+@media(max-width:520px){
+  .recent-day{grid-template-columns:76px 1fr;gap:9px}
+}
+
 </style>
 </head>
 <body>
@@ -647,6 +691,13 @@ button.wore:hover{background:var(--green-soft)}
     <div id="buildResults"></div>
   </div>
 
+
+  <div class="card recent-workwear-card">
+    <h2 class="section-title">Recent Workwear</h2>
+    <p class="section-sub">Your last five confirmed workday outfits.</p>
+    <div id="recentWorkwear" class="recent-workwear"></div>
+  </div>
+
   <details>
     <summary>How recommendations work</summary>
     <div class="details-body"><strong>Weather wins:</strong> choose Today or Tomorrow; the selected day’s temperature, feels-like temperature, forecast high and precipitation are the strongest inputs.
@@ -657,7 +708,7 @@ button.wore:hover{background:var(--green-soft)}
       Your 28″ ABC pants are polo-first and Jordan-only—boots and Stan Smiths are excluded with them.
       Boots are completely excluded from May through September, and from October through April they are only considered when the effective temperature is below 65°F.
       The picker favors contrast (dark pants with lighter tops, khaki with darker tops), avoids overly brown combinations without separation, treats black dress Blundstones as the more polished boot and Tobacco #1911s as the more casual/rugged boot, and keeps jeans in casual-work territory.
-      The calendar month then nudges color, texture and footwear without overriding unusual weather. Each generation returns three choices: Practical / Comfortable, Balanced, and Style-forward. If you modify a recommendation, open “Change what I’m wearing” and select the pants, top, shoes, and optional layer you actually chose. Then tap “I’m wearing this”; the app logs the actual selected top for rotation, and the selected Today/Tomorrow date is used as the wear date; that top is then held out until it is in a later work week and at least 4 business days have passed between wears (for example, Friday → next Thursday). All three obey the same hard weather and wardrobe rules, but each is scored differently so you can choose between ease, the best all-around option, or a more fashion-driven look. The off-white On THE ROGER Clubhouse Pro is treated as the middle-ground neutral sneaker: more polished than the Jordans and sportier than the Stan Smiths. The five UNIQLO soft-woven cotton shirts are treated as flannel-adjacent transitional pieces for fall, winter and cooler early-spring days. The charcoal Amazon Essentials shirt is treated as a true heavyweight flannel for colder conditions. The Abercrombie brown/charcoal plaid overshirt is treated as a removable chilly-day layer, with black jeans strongly preferred and the black/khaki T-shirts or cream/Filson thermals used as its base layers. The Loewe olive quilted jacket is treated as the sole green element in an outfit and is never paired with green pants or green tops. Every wardrobe item is included in the outfit engine; curated combinations are preferred, and compatible fallback combinations are generated automatically so Build Around an Item works for every piece.</div>
+      The calendar month then nudges color, texture and footwear without overriding unusual weather. Each generation returns three choices: Practical / Comfortable, Balanced, and Style-forward. Confirmed weekday outfits are saved locally and the five most recent appear in Recent Workwear above this section. If you modify a recommendation, open “Change what I’m wearing” and select the pants, top, shoes, and optional layer you actually chose. Then tap “I’m wearing this”; the app logs the actual selected top for rotation, and the selected Today/Tomorrow date is used as the wear date; that top is then held out until it is in a later work week and at least 4 business days have passed between wears (for example, Friday → next Thursday). All three obey the same hard weather and wardrobe rules, but each is scored differently so you can choose between ease, the best all-around option, or a more fashion-driven look. The off-white On THE ROGER Clubhouse Pro is treated as the middle-ground neutral sneaker: more polished than the Jordans and sportier than the Stan Smiths. The five UNIQLO soft-woven cotton shirts are treated as flannel-adjacent transitional pieces for fall, winter and cooler early-spring days. The charcoal Amazon Essentials shirt is treated as a true heavyweight flannel for colder conditions. The Abercrombie brown/charcoal plaid overshirt is treated as a removable chilly-day layer, with black jeans strongly preferred and the black/khaki T-shirts or cream/Filson thermals used as its base layers. The Loewe olive quilted jacket is treated as the sole green element in an outfit and is never paired with green pants or green tops. Every wardrobe item is included in the outfit engine; curated combinations are preferred, and compatible fallback combinations are generated automatically so Build Around an Item works for every piece.</div>
   </details>
 </div>
 
@@ -844,6 +895,102 @@ button.wore:hover{background:var(--green-soft)}
   let lastPick = null;
   let currentDailyOptions = {practical:null, balanced:null, style:null};
   const wearHistoryKey = 'outfitPickerWearHistoryV1';
+  const wearLogKey = 'outfitPickerWearLogV1';
+
+  function loadWearLog(){
+    try {
+      const log = JSON.parse(localStorage.getItem(wearLogKey) || '[]');
+      return Array.isArray(log) ? log : [];
+    } catch(e) {
+      return [];
+    }
+  }
+
+  function saveWearLog(log){
+    localStorage.setItem(wearLogKey, JSON.stringify(log));
+  }
+
+  function saveConfirmedOutfit(date, actual){
+    const dateStr = localDateString(date);
+    let log = loadWearLog();
+
+    // One confirmed work outfit per date; a later confirmation replaces it.
+    log = log.filter(entry => entry.date !== dateStr);
+    log.push({
+      date: dateStr,
+      pants: actual.pants,
+      top: actual.top,
+      shoes: actual.shoes,
+      layer: actual.layer || ''
+    });
+
+    // Keep a modest history without letting localStorage grow forever.
+    log.sort((a,b) => a.date.localeCompare(b.date));
+    if (log.length > 60) log = log.slice(-60);
+    saveWearLog(log);
+  }
+
+  function renderRecentWorkwear(){
+    const container = $('recentWorkwear');
+    if (!container) return;
+
+    const today = localDateString(new Date());
+    const entries = loadWearLog()
+      .filter(entry => {
+        if (!entry || !entry.date || entry.date > today) return false;
+        const d = parseLocalDate(entry.date);
+        const day = d.getDay();
+        return day >= 1 && day <= 5;
+      })
+      .sort((a,b) => b.date.localeCompare(a.date))
+      .slice(0,5);
+
+    container.innerHTML = '';
+
+    if (!entries.length) {
+      const empty = document.createElement('div');
+      empty.className = 'recent-empty';
+      empty.textContent = 'Your confirmed work outfits will appear here as you use “I’m wearing this.”';
+      container.appendChild(empty);
+      return;
+    }
+
+    entries.forEach(entry => {
+      const row = document.createElement('div');
+      row.className = 'recent-day';
+
+      const date = document.createElement('div');
+      date.className = 'recent-date';
+      date.textContent = parseLocalDate(entry.date).toLocaleDateString(undefined, {
+        weekday:'short', month:'short', day:'numeric'
+      });
+
+      const pieces = document.createElement('div');
+      pieces.className = 'recent-pieces';
+
+      const addPiece = (label, value) => {
+        if (!value) return;
+        const span = document.createElement('span');
+        span.className = 'recent-piece';
+
+        const strong = document.createElement('strong');
+        strong.textContent = label;
+        span.appendChild(strong);
+        span.appendChild(document.createTextNode(value));
+        pieces.appendChild(span);
+      };
+
+      addPiece('Pants', entry.pants);
+      addPiece('Top', entry.top);
+      addPiece('Shoes', entry.shoes);
+      if (entry.layer) addPiece('Layer', entry.layer);
+
+      row.appendChild(date);
+      row.appendChild(pieces);
+      container.appendChild(row);
+    });
+  }
+
 
   function loadWearHistory(){
     try { return JSON.parse(localStorage.getItem(wearHistoryKey) || '{}'); }
@@ -1603,6 +1750,10 @@ button.wore:hover{background:var(--green-soft)}
     history[top] = localDateString(wearDate);
     saveWearHistory(history);
 
+    // Save the complete outfit actually selected in the adjustment dropdowns.
+    saveConfirmedOutfit(wearDate, actual);
+    renderRecentWorkwear();
+
     const next = nextEligibleDateForTop(top);
     const dayLabel = Number($('forecastDay')?.value || 0) === 1 ? 'tomorrow' : 'today';
 
@@ -1827,6 +1978,7 @@ button.wore:hover{background:var(--green-soft)}
   $('buildBtn').addEventListener('click', buildAround);
 
   refreshItems();
+  renderRecentWorkwear();
   loadWeatherForLocation('Bellevue, WA').catch(()=>{
     $('weatherStatus').textContent='Could not automatically load Bellevue weather. Tap “Load weather” to try again.';
   });
