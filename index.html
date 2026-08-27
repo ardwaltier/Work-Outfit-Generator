@@ -535,6 +535,132 @@ button.recent-love.liked{
   cursor:default;
 }
 
+
+.past-outfit-tools{
+  margin-top:10px;
+  border-top:1px solid var(--line);
+  padding-top:10px;
+}
+.past-outfit-tools summary{
+  cursor:pointer;
+  color:var(--green);
+  font-size:12px;
+  font-weight:700;
+  list-style:none;
+}
+.past-outfit-tools summary::-webkit-details-marker{display:none}
+.past-outfit-tools summary::before{content:"＋ ";font-weight:400}
+.past-outfit-tools[open] summary::before{content:"− "}
+.past-outfit-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:8px;
+  margin-top:9px;
+}
+.past-outfit-grid label{
+  font-size:9px;
+  color:var(--muted);
+  text-transform:uppercase;
+  letter-spacing:.07em;
+  margin-bottom:2px;
+}
+.past-outfit-grid select,
+.past-outfit-grid input{
+  width:100%;
+  padding:7px 8px;
+  font-size:11px;
+}
+.past-outfit-status{
+  margin-top:7px;
+  font-size:11px;
+  color:var(--muted);
+  min-height:14px;
+}
+@media(max-width:560px){
+  .past-outfit-grid{grid-template-columns:1fr}
+}
+
+
+.recent-toolbar{
+  display:flex;
+  gap:7px;
+  flex-wrap:wrap;
+  margin-top:10px;
+}
+.recent-toolbar button{
+  padding:7px 9px;
+  font-size:11px;
+  text-transform:none;
+  letter-spacing:.01em;
+}
+.full-history{
+  margin-top:10px;
+  border-top:1px solid var(--line);
+  padding-top:10px;
+}
+.history-filters{
+  display:flex;
+  gap:6px;
+  flex-wrap:wrap;
+  margin-bottom:8px;
+}
+.history-filters button{
+  padding:6px 8px;
+  font-size:10px;
+  text-transform:none;
+  letter-spacing:.01em;
+}
+.history-filters button.active{
+  background:var(--green);
+  color:#fff;
+  border-color:var(--green);
+}
+.history-month{
+  margin-top:14px;
+  margin-bottom:4px;
+  font-family:"Marcellus SC",Georgia,serif;
+  color:var(--green);
+  font-size:13px;
+  letter-spacing:.05em;
+}
+.year-review{
+  margin-top:12px;
+  border-top:1px solid var(--line);
+  padding-top:10px;
+}
+.year-review-grid{
+  display:grid;
+  grid-template-columns:1fr 1fr;
+  gap:10px;
+  margin-top:10px;
+}
+.year-stat{
+  border:1px solid var(--line);
+  border-radius:4px;
+  padding:10px;
+  background:rgba(255,255,255,.06);
+}
+.year-stat h4{
+  margin:0 0 6px;
+  font-family:"Marcellus SC",Georgia,serif;
+  color:var(--green);
+  font-size:12px;
+  letter-spacing:.04em;
+}
+.year-stat ol{
+  margin:0;
+  padding-left:18px;
+  font-size:11px;
+  line-height:1.5;
+}
+.year-summary{
+  font-size:12px;
+  color:var(--muted);
+}
+@media(max-width:620px){
+  .year-review-grid{grid-template-columns:1fr}
+}
+
 </style>
 </head>
 <body>
@@ -771,6 +897,52 @@ button.recent-love.liked{
     <h2 class="section-title">Recent Workwear</h2>
     <p class="section-sub">Your last five confirmed workday outfits.</p>
     <div id="recentWorkwear" class="recent-workwear"></div>
+    <div class="recent-toolbar">
+      <button id="viewAllWorkwearBtn" type="button" class="secondary">View all workwear</button>
+      <button id="exportWorkwearCsvBtn" type="button" class="secondary">Export CSV</button>
+      <button id="yearReviewBtn" type="button" class="secondary">Year in Review</button>
+    </div>
+
+    <div id="fullHistoryPanel" class="full-history hidden">
+      <div class="history-filters">
+        <button type="button" class="secondary history-filter active" data-days="30">Last 30</button>
+        <button type="button" class="secondary history-filter" data-days="60">Last 60</button>
+        <button type="button" class="secondary history-filter" data-days="90">Last 90</button>
+        <button type="button" class="secondary history-filter" data-days="all">All</button>
+      </div>
+      <div id="fullHistoryList"></div>
+    </div>
+
+    <div id="yearReviewPanel" class="year-review hidden">
+      <div id="yearReviewContent"></div>
+    </div>
+    <details class="past-outfit-tools">
+      <summary>Add past outfit</summary>
+      <div class="past-outfit-grid">
+        <div>
+          <label for="pastDate">Date</label>
+          <input id="pastDate" type="date">
+        </div>
+        <div>
+          <label for="pastPants">Pants</label>
+          <select id="pastPants"></select>
+        </div>
+        <div>
+          <label for="pastTop">Top</label>
+          <select id="pastTop"></select>
+        </div>
+        <div>
+          <label for="pastShoes">Shoes</label>
+          <select id="pastShoes"></select>
+        </div>
+        <div>
+          <label for="pastLayer">Layer</label>
+          <select id="pastLayer"></select>
+        </div>
+      </div>
+      <button id="savePastOutfitBtn" type="button">Save past outfit</button>
+      <div id="pastOutfitStatus" class="past-outfit-status" aria-live="polite"></div>
+    </details>
   </div>
 
   <details>
@@ -783,7 +955,7 @@ button.recent-love.liked{
       Your 28″ ABC pants are polo-first and Jordan-only—boots and Stan Smiths are excluded with them.
       Boots are completely excluded from May through September, and from October through April they are only considered when the effective temperature is below 65°F.
       The picker favors contrast (dark pants with lighter tops, khaki with darker tops), avoids overly brown combinations without separation, treats black dress Blundstones as the more polished boot and Tobacco #1911s as the more casual/rugged boot, and keeps jeans in casual-work territory.
-      The calendar month then nudges color, texture and footwear without overriding unusual weather. Each generation returns three choices: Practical / Comfortable, Balanced, and Style-forward. Confirmed weekday outfits are saved locally and the five most recent appear in Recent Workwear above this section. You can edit or delete those entries; changing a past top rebuilds the rotation history automatically. “I liked this outfit” can be used either on a current recommendation or from Recent Workwear. Once an exact outfit has been liked, its button shows “Liked ✓” so you can see that the preference is already saved. Likes add only a small capped preference bonus to that outfit and similar style traits, so weather and hard rules still dominate. If you modify a recommendation, open “Change what I’m wearing” and select the pants, top, shoes, and optional layer you actually chose. Then tap “I’m wearing this”; the app logs the actual selected top for rotation, and the selected Today/Tomorrow date is used as the wear date; that top is then held out until it is in a later work week and at least 4 business days have passed between wears (for example, Friday → next Thursday). All three obey the same hard weather and wardrobe rules, but each is scored differently so you can choose between ease, the best all-around option, or a more fashion-driven look. The off-white On THE ROGER Clubhouse Pro is treated as the middle-ground neutral sneaker: more polished than the Jordans and sportier than the Stan Smiths. The five UNIQLO soft-woven cotton shirts are treated as flannel-adjacent transitional pieces for fall, winter and cooler early-spring days. The charcoal Amazon Essentials shirt is treated as a true heavyweight flannel for colder conditions. The Abercrombie brown/charcoal plaid overshirt is treated as a removable chilly-day layer, with black jeans strongly preferred and the black/khaki T-shirts or cream/Filson thermals used as its base layers. The Loewe olive quilted jacket is treated as the sole green element in an outfit and is never paired with green pants or green tops. Every wardrobe item is included in the outfit engine; curated combinations are preferred, and compatible fallback combinations are generated automatically so Build Around an Item works for every piece.</div>
+      The calendar month then nudges color, texture and footwear without overriding unusual weather. Each generation returns three choices: Practical / Comfortable, Balanced, and Style-forward. Confirmed weekday outfits are saved locally and the five most recent appear in Recent Workwear above this section. You can also use “Add past outfit” to backfill a missed Monday–Friday entry, and the rotation history will update from that saved date. View All Workwear keeps the complete confirmed history and can filter the last 30, 60, 90 days or all time. Export CSV creates an Excel-friendly file of the full history. Year in Review summarizes the current year with most-worn outfits plus top and bottom clothing rankings. You can edit or delete those entries; changing a past top rebuilds the rotation history automatically. “I liked this outfit” can be used either on a current recommendation or from Recent Workwear. Once an exact outfit has been liked, its button shows “Liked ✓” so you can see that the preference is already saved. Likes add only a small capped preference bonus to that outfit and similar style traits, so weather and hard rules still dominate. If you modify a recommendation, open “Change what I’m wearing” and select the pants, top, shoes, and optional layer you actually chose. Then tap “I’m wearing this”; the app logs the actual selected top for rotation, and the selected Today/Tomorrow date is used as the wear date; that top is then held out until it is in a later work week and at least 4 business days have passed between wears (for example, Friday → next Thursday). All three obey the same hard weather and wardrobe rules, but each is scored differently so you can choose between ease, the best all-around option, or a more fashion-driven look. The off-white On THE ROGER Clubhouse Pro is treated as the middle-ground neutral sneaker: more polished than the Jordans and sportier than the Stan Smiths. The five UNIQLO soft-woven cotton shirts are treated as flannel-adjacent transitional pieces for fall, winter and cooler early-spring days. The charcoal Amazon Essentials shirt is treated as a true heavyweight flannel for colder conditions. The Abercrombie brown/charcoal plaid overshirt is treated as a removable chilly-day layer, with black jeans strongly preferred and the black/khaki T-shirts or cream/Filson thermals used as its base layers. The Loewe olive quilted jacket is treated as the sole green element in an outfit and is never paired with green pants or green tops. Every wardrobe item is included in the outfit engine; curated combinations are preferred, and compatible fallback combinations are generated automatically so Build Around an Item works for every piece.</div>
   </details>
 </div>
 
@@ -1119,6 +1291,8 @@ button.recent-love.liked{
     saveWearLog(loadWearLog().filter(e=>e.date!==dateStr));
     rebuildTopWearHistoryFromLog();
     renderRecentWorkwear();
+    if(!$('fullHistoryPanel').classList.contains('hidden')) renderFullHistory();
+    if(!$('yearReviewPanel').classList.contains('hidden')) renderYearReview();
   }
 
   function saveConfirmedOutfit(date, actual){
@@ -1135,11 +1309,306 @@ button.recent-love.liked{
       layer: actual.layer || ''
     });
 
-    // Keep a modest history without letting localStorage grow forever.
+    // Keep the complete workwear history for long-term analytics.
     log.sort((a,b) => a.date.localeCompare(b.date));
-    if (log.length > 60) log = log.slice(-60);
     saveWearLog(log);
     rebuildTopWearHistoryFromLog();
+  }
+
+  function populatePastOutfitForm(){
+    fillSelect($('pastPants'), pants, pants[0]);
+    fillSelect($('pastTop'), tops, tops[0]);
+    fillSelect($('pastShoes'), shoes, shoes[0]);
+    fillSelect($('pastLayer'), outerwear, '', true);
+
+    const dateInput=$('pastDate');
+    if(dateInput){
+      const today=localDateString(new Date());
+      dateInput.max=today;
+
+      // Default to the most recent prior workday.
+      const d=new Date();
+      d.setHours(12,0,0,0);
+      do { d.setDate(d.getDate()-1); } while(d.getDay()===0 || d.getDay()===6);
+      dateInput.value=localDateString(d);
+    }
+  }
+
+  function savePastOutfit(){
+    const dateStr=$('pastDate').value;
+    const status=$('pastOutfitStatus');
+
+    if(!dateStr){
+      status.textContent='Choose a date first.';
+      return;
+    }
+
+    const d=parseLocalDate(dateStr);
+    const day=d.getDay();
+    if(day===0 || day===6){
+      status.textContent='Choose a Monday–Friday workday.';
+      return;
+    }
+
+    const today=localDateString(new Date());
+    if(dateStr>today){
+      status.textContent='Past Workwear only accepts today or an earlier date.';
+      return;
+    }
+
+    const actual={
+      pants:$('pastPants').value,
+      top:$('pastTop').value,
+      shoes:$('pastShoes').value,
+      layer:$('pastLayer').value || ''
+    };
+
+    saveConfirmedOutfit(d, actual);
+    renderRecentWorkwear();
+
+    status.textContent=`Saved ${d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}.`;
+  }
+
+  let currentHistoryDays = 30;
+
+  function completedWearLog(){
+    const today=localDateString(new Date());
+    return loadWearLog()
+      .filter(entry=>{
+        if(!entry || !entry.date || entry.date>today) return false;
+        const day=parseLocalDate(entry.date).getDay();
+        return day>=1 && day<=5;
+      })
+      .sort((a,b)=>b.date.localeCompare(a.date));
+  }
+
+  function filteredHistory(days){
+    const log=completedWearLog();
+    if(days==='all') return log;
+    const cutoff=new Date();
+    cutoff.setHours(12,0,0,0);
+    cutoff.setDate(cutoff.getDate()-Number(days)+1);
+    return log.filter(e=>parseLocalDate(e.date)>=cutoff);
+  }
+
+  function makeHistoryRow(entry, allowEdit=true){
+    const row=document.createElement('div');
+    row.className='recent-day';
+
+    const date=document.createElement('div');
+    date.className='recent-date';
+    date.textContent=parseLocalDate(entry.date).toLocaleDateString(undefined,{
+      weekday:'short',month:'short',day:'numeric',year:'numeric'
+    });
+
+    const right=document.createElement('div');
+    const pieces=document.createElement('div');
+    pieces.className='recent-pieces';
+
+    const add=(lab,val)=>{
+      if(!val) return;
+      const sp=document.createElement('span');
+      sp.className='recent-piece';
+      const st=document.createElement('strong');
+      st.textContent=lab;
+      sp.appendChild(st);
+      sp.appendChild(document.createTextNode(val));
+      pieces.appendChild(sp);
+    };
+
+    add('Pants',entry.pants);
+    add('Top',entry.top);
+    add('Shoes',entry.shoes);
+    if(entry.layer) add('Layer',entry.layer);
+
+    right.appendChild(pieces);
+
+    // Full history keeps the same like signal, while edit/delete remain in Recent Workwear.
+    const actions=document.createElement('div');
+    actions.className='recent-actions';
+    const like=document.createElement('button');
+    like.type='button';
+    like.className='recent-love';
+    const exact=exactOutfitKey(entry.pants,entry.top,entry.shoes,entry.layer||'');
+    setLoveButtonState(like,isLovedExact(exact));
+    like.addEventListener('click',()=>loveRecentOutfit(entry,like));
+    actions.appendChild(like);
+
+    right.appendChild(actions);
+    row.appendChild(date);
+    row.appendChild(right);
+    return row;
+  }
+
+  function renderFullHistory(){
+    const container=$('fullHistoryList');
+    if(!container) return;
+    const entries=filteredHistory(currentHistoryDays);
+    container.innerHTML='';
+
+    if(!entries.length){
+      const x=document.createElement('div');
+      x.className='recent-empty';
+      x.textContent='No confirmed workwear in this range.';
+      container.appendChild(x);
+      return;
+    }
+
+    let lastMonth='';
+    entries.forEach(entry=>{
+      const d=parseLocalDate(entry.date);
+      const month=d.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+      if(month!==lastMonth){
+        const h=document.createElement('div');
+        h.className='history-month';
+        h.textContent=month;
+        container.appendChild(h);
+        lastMonth=month;
+      }
+      container.appendChild(makeHistoryRow(entry,false));
+    });
+  }
+
+  function toggleFullHistory(){
+    const panel=$('fullHistoryPanel');
+    const btn=$('viewAllWorkwearBtn');
+    const opening=panel.classList.contains('hidden');
+    panel.classList.toggle('hidden');
+    btn.textContent=opening?'Hide all workwear':'View all workwear';
+    if(opening) renderFullHistory();
+  }
+
+  function setHistoryRange(days,button){
+    currentHistoryDays=days==='all'?'all':Number(days);
+    document.querySelectorAll('.history-filter').forEach(b=>b.classList.remove('active'));
+    if(button) button.classList.add('active');
+    renderFullHistory();
+  }
+
+  function csvEscape(value){
+    const s=String(value??'');
+    return `"${s.replaceAll('"','""')}"`;
+  }
+
+  function exportWorkwearCsv(){
+    const log=completedWearLog().slice().sort((a,b)=>a.date.localeCompare(b.date));
+    if(!log.length){
+      alert('No workwear history to export yet.');
+      return;
+    }
+
+    const header=['Date','Pants','Top','Shoes','Layer','Liked'];
+    const rows=log.map(e=>{
+      const liked=isLovedExact(exactOutfitKey(e.pants,e.top,e.shoes,e.layer||''))?'Yes':'No';
+      return [e.date,e.pants,e.top,e.shoes,e.layer||'',liked];
+    });
+
+    const csv=[header,...rows].map(r=>r.map(csvEscape).join(',')).join('\n');
+    const blob=new Blob([csv],{type:'text/csv;charset=utf-8;'});
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=`workwear-history-${localDateString(new Date())}.csv`;
+    document.body.appendChild(a);
+    a.click();
+    a.remove();
+    URL.revokeObjectURL(url);
+  }
+
+  function countItems(entries, field){
+    const counts={};
+    entries.forEach(e=>{
+      const v=e[field];
+      if(!v) return;
+      counts[v]=(counts[v]||0)+1;
+    });
+    return counts;
+  }
+
+  function sortedCounts(counts, asc=false){
+    return Object.entries(counts).sort((a,b)=>asc ? (a[1]-b[1] || a[0].localeCompare(b[0])) : (b[1]-a[1] || a[0].localeCompare(b[0])));
+  }
+
+  function addRanking(parent,title,items){
+    const box=document.createElement('div');
+    box.className='year-stat';
+    const h=document.createElement('h4');
+    h.textContent=title;
+    const ol=document.createElement('ol');
+    items.forEach(([name,count])=>{
+      const li=document.createElement('li');
+      li.textContent=`${name} — ${count} wear${count===1?'':'s'}`;
+      ol.appendChild(li);
+    });
+    if(!items.length){
+      const li=document.createElement('li');
+      li.textContent='Not enough data yet';
+      ol.appendChild(li);
+    }
+    box.appendChild(h);
+    box.appendChild(ol);
+    parent.appendChild(box);
+  }
+
+  function renderYearReview(){
+    const panel=$('yearReviewPanel');
+    const content=$('yearReviewContent');
+    const year=new Date().getFullYear();
+    const entries=completedWearLog().filter(e=>parseLocalDate(e.date).getFullYear()===year);
+    content.innerHTML='';
+
+    const summary=document.createElement('div');
+    summary.className='year-summary';
+    summary.textContent=entries.length
+      ? `${year}: ${entries.length} confirmed workday outfit${entries.length===1?'':'s'} logged.`
+      : `${year}: no confirmed workday outfits logged yet.`;
+    content.appendChild(summary);
+
+    const grid=document.createElement('div');
+    grid.className='year-review-grid';
+
+    const outfitCounts={};
+    entries.forEach(e=>{
+      const label=[e.pants,e.top,e.shoes,e.layer||'No layer'].join(' + ');
+      outfitCounts[label]=(outfitCounts[label]||0)+1;
+    });
+
+    addRanking(grid,'Most-worn outfits',sortedCounts(outfitCounts).slice(0,5));
+
+    const allPieces=[];
+    entries.forEach(e=>{
+      ['pants','top','shoes','layer'].forEach(f=>{
+        if(e[f]) allPieces.push(e[f]);
+      });
+    });
+    const pieceCounts={};
+    allPieces.forEach(v=>pieceCounts[v]=(pieceCounts[v]||0)+1);
+
+    addRanking(grid,'Most-worn items',sortedCounts(pieceCounts).slice(0,5));
+
+    // Least-worn counts use the full owned wardrobe and include zero-wear pieces.
+    const owned=[...pants,...tops,...shoes,...outerwear];
+    const ownedCounts={};
+    owned.forEach(v=>ownedCounts[v]=pieceCounts[v]||0);
+    addRanking(grid,'Least-worn items',sortedCounts(ownedCounts,true).slice(0,5));
+
+    const topCounts=countItems(entries,'top');
+    const pantCounts=countItems(entries,'pants');
+    addRanking(grid,'Most-worn tops',sortedCounts(topCounts).slice(0,5));
+    addRanking(grid,'Least-worn tops',sortedCounts(Object.fromEntries(tops.map(v=>[v,topCounts[v]||0])),true).slice(0,5));
+    addRanking(grid,'Most-worn pants',sortedCounts(pantCounts).slice(0,5));
+    addRanking(grid,'Least-worn pants',sortedCounts(Object.fromEntries(pants.map(v=>[v,pantCounts[v]||0])),true).slice(0,5));
+
+    content.appendChild(grid);
+  }
+
+  function toggleYearReview(){
+    const panel=$('yearReviewPanel');
+    const btn=$('yearReviewBtn');
+    const opening=panel.classList.contains('hidden');
+    panel.classList.toggle('hidden');
+    btn.textContent=opening?'Hide Year in Review':'Year in Review';
+    if(opening) renderYearReview();
   }
 
   function renderRecentWorkwear(){
@@ -2273,6 +2742,7 @@ button.recent-love.liked{
 
   refreshItems();
   populateOutfitChecker();
+  populatePastOutfitForm();
   wireActualOutfitLoveRefresh();
   refreshCurrentLoveButtons();
   renderRecentWorkwear();
