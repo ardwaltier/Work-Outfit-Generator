@@ -1335,11 +1335,24 @@ button.recent-love.liked{
   }
 
   function savePastOutfit(){
+    const saveBtn=$('savePastOutfitBtn');
+    const saveBtnOriginalText=saveBtn.textContent;
+    saveBtn.textContent='Saving…';
+    saveBtn.disabled=true;
+
+    const finishSaveButton=()=>{
+      setTimeout(()=>{
+        saveBtn.textContent=saveBtnOriginalText;
+        saveBtn.disabled=false;
+      },500);
+    };
+
     const dateStr=$('pastDate').value;
     const status=$('pastOutfitStatus');
 
     if(!dateStr){
       status.textContent='Choose a date first.';
+      finishSaveButton();
       return;
     }
 
@@ -1347,12 +1360,14 @@ button.recent-love.liked{
     const day=d.getDay();
     if(day===0 || day===6){
       status.textContent='Choose a Monday–Friday workday.';
+      finishSaveButton();
       return;
     }
 
     const today=localDateString(new Date());
     if(dateStr>today){
       status.textContent='Past Workwear only accepts today or an earlier date.';
+      finishSaveButton();
       return;
     }
 
@@ -1365,8 +1380,11 @@ button.recent-love.liked{
 
     saveConfirmedOutfit(d, actual);
     renderRecentWorkwear();
+    if (!$('fullHistoryPanel').classList.contains('hidden')) renderFullHistory();
+    if (!$('yearReviewPanel').classList.contains('hidden')) renderYearReview();
 
-    status.textContent=`Saved ${d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}.`;
+    status.textContent=`Saved ${d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}: ${actual.top}.`;
+    finishSaveButton();
   }
 
   let currentHistoryDays = 30;
@@ -2739,6 +2757,15 @@ button.recent-love.liked{
   $('styleWoreBtn').addEventListener('click', ()=>confirmWorn('style'));
   $('category').addEventListener('change', refreshItems);
   $('buildBtn').addEventListener('click', buildAround);
+
+  $('savePastOutfitBtn').addEventListener('click', savePastOutfit);
+  $('viewAllWorkwearBtn').addEventListener('click', toggleFullHistory);
+  $('exportWorkwearCsvBtn').addEventListener('click', exportWorkwearCsv);
+  $('yearReviewBtn').addEventListener('click', toggleYearReview);
+  $('checkOutfitBtn').addEventListener('click', analyzeCheckedOutfit);
+  $('practicalLoveBtn').addEventListener('click', ()=>saveLovedOutfit('practical'));
+  $('balancedLoveBtn').addEventListener('click', ()=>saveLovedOutfit('balanced'));
+  $('styleLoveBtn').addEventListener('click', ()=>saveLovedOutfit('style'));
 
   refreshItems();
   populateOutfitChecker();
