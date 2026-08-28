@@ -948,7 +948,7 @@ button.recent-love.liked{
   <details>
     <summary>How recommendations work</summary>
     <div class="details-body"><strong>Weather wins:</strong> choose Today or Tomorrow; the selected day’s temperature, feels-like temperature, forecast high and precipitation are the strongest inputs.
-      The cream Hugo Boss quarter-zip is your lightest sweater and can appear into the mid-60s; heavier sweaters are held for cooler weather, and the L.L.Bean Waterfowl sweater is reserved mostly for sub-50°F days.
+      The cream Hugo Boss quarter-zip is your lightest sweater. The washed-deep-navy Quince fleece quarter-zip is warmer and more casual, with a hard forecast-high ceiling around 62°F. The cream Hugo Boss quarter-zip and can appear into the mid-60s; heavier sweaters are held for cooler weather, and the L.L.Bean Waterfowl sweater is reserved mostly for sub-50°F days.
       Outerwear is optional rather than part of every office outfit. The charcoal Canada Goose quilted liner is a high-priority winter workday layer for cold, mostly dry conditions or light rain when outdoor exposure is brief. The navy Barbour Ashby remains the preferred cool/wet fall-winter jacket, while the dark-brown UNIQLO blouson is the year-round mild-rain backup. The olive Loewe quilted jacket is a style-forward cool-weather option for mostly dry days. Warm, dry summer days generally get no jacket suggestion.
       Dark-brown cords are primarily October–March and are excluded in warmer weather.
       Forecast high is the hard ceiling for warm/heavy tops: the denim shirt to about 77°F, rugby shirts can go up to 72°F, soft-woven shirts to about 68°F, the brown micro-check to 66°F, the cream waffle thermal to 62°F, the brown Filson thermal to 60°F, and the heavyweight charcoal flannel to about 58°F. Effective temperature still helps rank eligible outfits, but it cannot override those ceilings.
@@ -970,6 +970,7 @@ button.recent-love.liked{
 
   const sweaters = [
     'Hugo Boss lightweight quarter-zip — Cream',
+    'Quince Everyday Fleece Quarter-Zip — Washed Deep Navy',
     'Marine Layer Inverness Crewneck — Oatmeal',
     'Lululemon Textured Knit Crewneck — Heathered Classic Navy',
     'Lululemon Textured Knit Crewneck — Rainforest Green',
@@ -1134,7 +1135,11 @@ button.recent-love.liked{
     ['Khaki 365','UNIQLO soft-woven button-down — Green/Navy Check','Tobacco #1911 Blundstone','polished'],
     ['Black 365','UNIQLO soft-woven button-down — Navy/Burgundy Check','Black dress Blundstone','polished'],
     ['Navy 365','Banana Republic brown micro-check button-down','Black dress Blundstone','polished'],
-    ['Khaki 365','Amazon Essentials heavyweight flannel — Charcoal/Black','Tobacco #1911 Blundstone','casual'],
+    ['Khaki 365','Amazon Essentials heavyweight flannel — Charcoal/Black','Tobacco #1911 Blundstone','casual'],    ['Khaki 365','Quince Everyday Fleece Quarter-Zip — Washed Deep Navy','Off-white/gold Stan Smith','casual'],
+    ['Chocolate 365','Quince Everyday Fleece Quarter-Zip — Washed Deep Navy','Tobacco #1911 Blundstone','casual'],
+    ['Black 365','Quince Everyday Fleece Quarter-Zip — Washed Deep Navy','On THE ROGER Clubhouse Pro — Off-white','casual'],
+    ['F&T medium/dark athletic-taper jeans','Quince Everyday Fleece Quarter-Zip — Washed Deep Navy','Tobacco #1911 Blundstone','casual'],
+    ['Marine Layer Flex Terry Cords — Dark Brown','Quince Everyday Fleece Quarter-Zip — Washed Deep Navy','Tobacco #1911 Blundstone','casual'],
   ];
 
   let wx = null;
@@ -1698,6 +1703,11 @@ button.recent-love.liked{
   }
 
 
+  function loadWearHistory(){
+    try { return JSON.parse(localStorage.getItem(wearHistoryKey) || '{}'); }
+    catch(e){ return {}; }
+  }
+
   function saveWearHistory(h){ localStorage.setItem(wearHistoryKey, JSON.stringify(h)); }
 
   function localDateString(date=new Date()){
@@ -1888,7 +1898,8 @@ button.recent-love.liked{
 
     // Sweater ceilings. The Boss quarter-zip is the lightest sweater.
     if (top.includes('Hugo Boss') && high > 67) return false;
-    if (isSweater(top) && !top.includes('Hugo Boss') && high > 64) return false;
+    if (top.includes('Quince Everyday Fleece Quarter-Zip') && high > 62) return false;
+    if (isSweater(top) && !top.includes('Hugo Boss') && !top.includes('Quince Everyday Fleece Quarter-Zip') && high > 64) return false;
     if (top.includes('Waterfowl') && high > 50) return false;
 
     // Cords are cool-weather and seasonal.
@@ -2262,6 +2273,7 @@ button.recent-love.liked{
     let text = `The ${targetDay} forecast is the main driver (effective temperature about ${t}°F). `;
     if (isSweater(top)) text += 'A sweater is appropriate for the cooler temperature. ';
     if (top.includes('Waterfowl')) text += 'The heavier Waterfowl sweater is being reserved for genuinely cold conditions. ';
+    if (top.includes('Quince Everyday Fleece Quarter-Zip')) text += 'The Quince fleece quarter-zip is a warmer, more casual layer than the lightweight Boss quarter-zip and works best on genuinely cool days. ';
     if (softWovenTops.includes(top)) text += 'The soft-woven cotton shirt adds flannel-like texture without the weight of a true heavy flannel. ';
     if (top.includes('heavyweight flannel')) text += 'The heavyweight charcoal flannel is reserved for genuinely chilly days. ';
     if (overshirtBaseLayers.includes(top)) text += 'This base layer is paired specifically with the Abercrombie overshirt for an easy removable chilly-day layer. ';
@@ -2319,6 +2331,7 @@ button.recent-love.liked{
     if (top.includes('rugby')) s += 4;
     if (top.includes('Banana Republic tan/white striped')) s += 3;
     if (top.includes('Hugo Boss')) s += 2;
+    if (top.includes('Quince Everyday Fleece Quarter-Zip')) s += 1.2;
     if (top.includes('Green/Navy Check') || top.includes('Navy/Burgundy Check')) s += 3;
     if (top.includes('brown micro-check')) s += 2.5;
     if (overshirtBaseLayers.includes(top)) s += 5;
@@ -2522,6 +2535,7 @@ button.recent-love.liked{
     if(isBoot && month>=5 && month<=9) issues.push('You generally avoid boots from May through September.');
     if(isBoot && t>=65) issues.push('Boots are heavier than you usually want at this temperature.');
     if(top.includes('denim shirt') && high>77) issues.push('The denim shirt is too warm for a forecast high above about 77°F.');
+    if(top.includes('Quince Everyday Fleece Quarter-Zip') && high>62) issues.push('The Quince fleece quarter-zip is too warm for a forecast high above about 62°F.');
     if(top.includes('rugby') && high>72) issues.push('The rugby is warmer/heavier than you usually prefer above a 72°F high.');
     if(softWovenTops.includes(top) && high>68) issues.push('The soft-woven shirt is too warm for this forecast high.');
     if(top.includes('brown micro-check') && high>66) issues.push('The brown micro-check is too warm for this forecast high.');
@@ -2607,6 +2621,7 @@ button.recent-love.liked{
           if (top.includes('Waterfowl') && high > 50) return false;
           if (pant.includes('Flex Terry Cords') && (month < 10 && month > 3)) return false;
           if (top.includes('denim shirt') && high > 77) return false;
+          if (top.includes('Quince Everyday Fleece Quarter-Zip') && high > 62) return false;
           if (top.includes('rugby') && high > 72) return false;
           if (softWovenTops.includes(top) && high > 68) return false;
           if (top.includes('brown micro-check') && high > 66) return false;
