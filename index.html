@@ -1,6 +1,9 @@
 <!doctype html>
 <html lang="en">
 <head>
+  <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+  <meta http-equiv="Pragma" content="no-cache">
+  <meta http-equiv="Expires" content="0">
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
 <title>Work Outfit Picker</title>
@@ -680,6 +683,28 @@ button.recent-love.liked{
   .year-review-grid{grid-template-columns:1fr}
 }
 
+
+.build-badge{
+  display:inline-block;
+  margin-top:6px;
+  font-size:9px;
+  letter-spacing:.08em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+.app-error-banner{
+  display:none;
+  margin:10px 0 14px;
+  padding:10px 12px;
+  border:1px solid #9b3f35;
+  border-radius:4px;
+  background:#fff3f0;
+  color:#6f2d26;
+  font-size:12px;
+  line-height:1.4;
+}
+.app-error-banner.show{display:block}
+
 </style>
 </head>
 <body>
@@ -687,8 +712,10 @@ button.recent-love.liked{
   <header class="brand">
     <div class="kicker">Daily wardrobe</div>
     <h1>Outfit Picker</h1>
+    <div id="appBuildBadge" class="build-badge">Build 2026.09.02-r1</div>
     <div class="ornament">■</div>
   </header>
+  <div id="appErrorBanner" class="app-error-banner" role="alert"></div>
 
   <div class="card">
     <h2 class="section-title">Plan the day</h2>
@@ -979,6 +1006,24 @@ button.recent-love.liked{
 </div>
 
 <script>
+  window.__WARDROBE_BUILD__ = "2026.09.02-r1";
+  window.addEventListener('error', function(event){
+    const banner=document.getElementById('appErrorBanner');
+    if(banner){
+      banner.textContent=`App error in build ${window.__WARDROBE_BUILD__}: ${event.message || 'Unknown JavaScript error'}`;
+      banner.classList.add('show');
+    }
+  });
+  window.addEventListener('unhandledrejection', function(event){
+    const banner=document.getElementById('appErrorBanner');
+    if(banner){
+      const msg=event.reason && event.reason.message ? event.reason.message : String(event.reason || 'Unknown error');
+      banner.textContent=`App error in build ${window.__WARDROBE_BUILD__}: ${msg}`;
+      banner.classList.add('show');
+    }
+  });
+
+
 (() => {
   const pants = [
     'Chocolate 365','Navy 365','Khaki 365','Black 365',
