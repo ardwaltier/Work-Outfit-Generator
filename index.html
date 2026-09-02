@@ -455,32 +455,48 @@ button.wore:hover{background:var(--green-soft)}
 }
 .recent-day{
   display:grid;
-  grid-template-columns:92px 1fr;
-  gap:12px;
-  padding:10px 0;
+  grid-template-columns:104px 1fr;
+  gap:14px;
+  padding:14px 0;
   border-top:1px solid var(--line);
 }
 .recent-day:first-child{border-top:0}
 .recent-date{
   font-family:"Marcellus SC", Georgia, serif;
   color:var(--green);
-  font-size:12px;
-  letter-spacing:.04em;
+  font-size:13px;
+  font-weight:700;
+  letter-spacing:.045em;
   line-height:1.35;
+  padding-top:3px;
 }
 .recent-pieces{
-  display:flex;
-  flex-wrap:wrap;
-  gap:4px 9px;
-  font-size:12px;
-  line-height:1.45;
+  display:grid;
+  grid-template-columns:1fr;
+  gap:6px;
+  font-size:13px;
+  line-height:1.35;
 }
+.recent-piece{
+  display:grid;
+  grid-template-columns:58px 1fr;
+  align-items:baseline;
+  gap:8px;
+  padding:4px 0;
+  border-bottom:1px solid rgba(0,0,0,.045);
+}
+.recent-piece:last-child{border-bottom:0}
 .recent-piece strong{
-  color:var(--muted);
-  font-size:10px;
+  color:var(--green);
+  font-size:9px;
+  font-weight:700;
   text-transform:uppercase;
-  letter-spacing:.06em;
-  margin-right:3px;
+  letter-spacing:.09em;
+  margin-right:0;
+}
+.recent-piece{
+  color:var(--text);
+  font-weight:600;
 }
 .recent-empty{
   color:var(--muted);
@@ -488,7 +504,10 @@ button.wore:hover{background:var(--green-soft)}
   padding:8px 0 2px;
 }
 @media(max-width:520px){
-  .recent-day{grid-template-columns:76px 1fr;gap:9px}
+  .recent-day{grid-template-columns:82px 1fr;gap:10px;padding:12px 0}
+  .recent-date{font-size:12px}
+  .recent-piece{grid-template-columns:50px 1fr;gap:7px}
+  .recent-pieces{font-size:12px}
 }
 
 
@@ -951,11 +970,11 @@ button.recent-love.liked{
       The cream Hugo Boss quarter-zip is your lightest sweater. The washed-deep-navy Quince fleece quarter-zip is warmer and more casual, with a hard forecast-high ceiling around 62°F. The cream Hugo Boss quarter-zip and can appear into the mid-60s; heavier sweaters are held for cooler weather, and the L.L.Bean Waterfowl sweater is reserved mostly for sub-50°F days.
       Outerwear is optional rather than part of every office outfit. The charcoal Canada Goose quilted liner is a high-priority winter workday layer for cold, mostly dry conditions or light rain when outdoor exposure is brief. The navy Barbour Ashby remains the preferred cool/wet fall-winter jacket, while the dark-brown UNIQLO blouson is the year-round mild-rain backup. The olive Loewe quilted jacket is a style-forward cool-weather option for mostly dry days. Warm, dry summer days generally get no jacket suggestion.
       Dark-brown cords are primarily October–March and are excluded in warmer weather.
-      Forecast high is the hard ceiling for warm/heavy tops: the denim shirt to about 77°F, rugby shirts can go up to 72°F, soft-woven shirts to about 68°F, the brown micro-check to 66°F, the cream waffle thermal to 62°F, the brown Filson thermal to 60°F, and the heavyweight charcoal flannel to about 58°F. Effective temperature still helps rank eligible outfits, but it cannot override those ceilings.
+      Forecast high is the hard ceiling for warm/heavy tops: the denim shirt to about 77°F, rugby shirts can go up to 72°F, soft-woven shirts to about 68°F, the cream waffle thermal to 62°F, the brown Filson thermal to 60°F, and the heavyweight charcoal flannel to about 58°F. Effective temperature still helps rank eligible outfits, but it cannot override those ceilings.
       Your 28″ ABC pants are polo-first and Jordan-only—boots and Stan Smiths are excluded with them.
       Boots are completely excluded from May through September, and from October through April they are only considered when the effective temperature is below 65°F.
       The picker favors contrast (dark pants with lighter tops, khaki with darker tops), avoids overly brown combinations without separation, treats black dress Blundstones as the more polished boot and Tobacco #1911s as the more casual/rugged boot, and keeps jeans in casual-work territory.
-      The calendar month then nudges color, texture and footwear without overriding unusual weather. Each generation returns three choices: Practical / Comfortable, Balanced, and Style-forward. Confirmed weekday outfits are saved locally and the five most recent appear in Recent Workwear above this section. You can also use “Add past outfit” to backfill a missed Monday–Friday entry, and the rotation history will update from that saved date. View All Workwear keeps the complete confirmed history and can filter the last 30, 60, 90 days or all time. Export CSV creates an Excel-friendly file of the full history. Year in Review summarizes the current year with most-worn outfits plus top and bottom clothing rankings. You can edit or delete those entries; changing a past top rebuilds the rotation history automatically. “I liked this outfit” can be used either on a current recommendation or from Recent Workwear. Once an exact outfit has been liked, its button shows “Liked ✓” so you can see that the preference is already saved. Likes add only a small capped preference bonus to that outfit and similar style traits, so weather and hard rules still dominate. If you modify a recommendation, open “Change what I’m wearing” and select the pants, top, shoes, and optional layer you actually chose. Then tap “I’m wearing this”; the app logs the actual selected top for rotation, and the selected Today/Tomorrow date is used as the wear date; that top is then held out until it is in a later work week and at least 4 business days have passed between wears (for example, Friday → next Thursday). All three obey the same hard weather and wardrobe rules, but each is scored differently so you can choose between ease, the best all-around option, or a more fashion-driven look. The off-white On THE ROGER Clubhouse Pro is treated as the middle-ground neutral sneaker: more polished than the Jordans and sportier than the Stan Smiths. The five UNIQLO soft-woven cotton shirts are treated as flannel-adjacent transitional pieces for fall, winter and cooler early-spring days. The charcoal Amazon Essentials shirt is treated as a true heavyweight flannel for colder conditions. The Abercrombie brown/charcoal plaid overshirt is treated as a removable chilly-day layer, with black jeans strongly preferred and the black/khaki T-shirts or cream/Filson thermals used as its base layers. The Loewe olive quilted jacket is treated as the sole green element in an outfit and is never paired with green pants or green tops. Every wardrobe item is included in the outfit engine; curated combinations are preferred, and compatible fallback combinations are generated automatically so Build Around an Item works for every piece.</div>
+      The calendar month then nudges color, texture and footwear without overriding unusual weather. Each generation returns three choices: Practical / Comfortable, Balanced, and Style-forward. Confirmed weekday outfits are saved locally and the five most recent appear in Recent Workwear above this section. You can also use “Add past outfit” to backfill a missed Monday–Friday entry, and the rotation history will update from that saved date. View All Workwear keeps the complete confirmed history and can filter the last 30, 60, 90 days or all time. Export CSV creates an Excel-friendly file of the full history. Year in Review summarizes the current year with most-worn outfits plus top and bottom clothing rankings. You can edit or delete those entries; changing a past top rebuilds the rotation history automatically. “I liked this outfit” can be used either on a current recommendation or from Recent Workwear. Once an exact outfit has been liked, its button shows “Liked ✓” so you can see that the preference is already saved. Likes add only a small capped preference bonus to that outfit and similar style traits, so weather and hard rules still dominate. If you modify a recommendation, open “Change what I’m wearing” and select the pants, top, shoes, and optional layer you actually chose. Then tap “I’m wearing this”; the app logs the actual selected top for rotation, and the selected Today/Tomorrow date is used as the wear date; that top is then held out until it is in a later work week and at least 4 business days have passed between wears (for example, Friday → next Thursday). All three obey the same hard weather and wardrobe rules, but each is scored differently so you can choose between ease, the best all-around option, or a more fashion-driven look. The off-white On THE ROGER Clubhouse Pro is treated as the middle-ground neutral sneaker: more polished than the Jordans and sportier than the Stan Smiths. The five UNIQLO soft-woven cotton shirts are treated as flannel-adjacent transitional pieces for fall, winter and cooler early-spring days. The charcoal Amazon Essentials shirt is treated as a true heavyweight flannel for colder conditions. The Abercrombie brown/charcoal plaid overshirt is treated as a removable chilly-day layer, with black jeans strongly preferred and the black/khaki T-shirts or cream/Filson thermals used as its base layers. The Loewe olive quilted jacket is treated as the sole green element in an outfit and is never paired with green pants or green tops. Wardrobe names shown in the app use your preferred naming convention while the recommendation rules keep stable internal identifiers behind the scenes. Every wardrobe item is included in the outfit engine; curated combinations are preferred, and compatible fallback combinations are generated automatically so Build Around an Item works for every piece.</div>
   </details>
 </div>
 
@@ -987,7 +1006,6 @@ button.recent-love.liked{
   ];
 
   const coldWeatherShirts = [
-    'Banana Republic brown micro-check button-down',
     'Amazon Essentials heavyweight flannel — Charcoal/Black'
   ];
 
@@ -1026,6 +1044,71 @@ button.recent-love.liked{
     'Canada Goose quilted liner jacket — Charcoal/Black',
     'Loewe quilted jacket — Olive / Brown Corduroy Collar',
     'Abercrombie textured overshirt — Brown/Charcoal Plaid'];
+
+  const displayNames = {
+  "Chocolate 365": "Chocolate 365 Trousers",
+  "Navy 365": "Navy 365 Trousers",
+  "Khaki 365": "Khaki 365 Trousers",
+  "Black 365": "Black 365 Trousers",
+  "Marine Layer Flex Terry Cords — Dark Brown": "Dark Brown Corduroy Trousers",
+  "Green ABC 28″": "Green ABC Slim Fit Trousers",
+  "Navy ABC 28″": "Navy ABC Slim Fit Trousers",
+  "Levi’s 502 medium wash": "Levi’s 502 - Medium Wash Denim",
+  "F&T medium/dark athletic-taper jeans": "F&T - Medium/Dark Wash Denim",
+  "Black slim denim": "F&T - Slim Black Denim",
+  "Pale blue/white striped Oxford": "Blue/White Striped Oxford",
+  "Green/white stripe Oxford": "Green/White Striped Oxford",
+  "Banana Republic tan/white striped button-down": "Beige Striped Oxford",
+  "Navy Oxford": "Navy Oxford",
+  "Black Oxford": "Black Oxford",
+  "Heather-gray pique polo": "Grey Pique Polo",
+  "Navy pique polo": "Navy Pique Polo",
+  "Black pique polo": "Black Pique Polo",
+  "J.Crew medium-wash denim shirt": "Medium Wash Denim Shirt",
+  "Black J.Crew rugby": "Black Rugby Shirt",
+  "Espresso F&T rugby": "Espresso Rugby Shirt",
+  "Hugo Boss lightweight quarter-zip — Cream": "Hugo Boss - Cream Quarter-zip Sweater",
+  "Quince Everyday Fleece Quarter-Zip — Washed Deep Navy": "Quince - Navy Quarter-zip Sweatshirt",
+  "Marine Layer Inverness Crewneck — Oatmeal": "Marine Layer - Oatmeal Inverness Crewneck Sweater",
+  "Lululemon Textured Knit Crewneck — Heathered Classic Navy": "Lululemon - Heathered Navy Knit Crewneck Sweater",
+  "Lululemon Textured Knit Crewneck — Rainforest Green": "Lululemon - Rainforest Green Knit Crewneck Sweater",
+  "Lululemon Textured Knit Crewneck — Heathered Black/Charcoal": "Lululemon - Heathered Black Knit Crewneck Sweater",
+  "L.L.Bean Waterfowl Sweater — Dark Cinder": "LL Bean - Brown Waterfowl Sweater",
+  "UNIQLO soft-woven button-down — Cream": "UNIQLO - Cream Button-down",
+  "UNIQLO soft-woven button-down — White": "UNIQLO - White Button-down",
+  "UNIQLO soft-woven button-down — Army Green": "UNIQLO - Army Green Button-down",
+  "UNIQLO soft-woven button-down — Green/Navy Check": "UNIQLO - Green/Navy Check Button-down",
+  "UNIQLO soft-woven button-down — Navy/Burgundy Check": "UNIQLO - Burgundy/Navy Check Button-down",
+  "Amazon Essentials heavyweight flannel — Charcoal/Black": "Amazon - Grey Heavyweight Flannel",
+  "Black T-shirt": "Black T-shirt",
+  "Khaki T-shirt": "Khaki T-shirt",
+  "Cream waffle thermal": "UNIQLO - Cream Waffle Thermal Shirt",
+  "Filson thermal shirt — Brown": "Filson - Brown Thermal Shirt",
+  "Off-white/gold Stan Smith": "Adidas - Off-white/Gold Stan Smiths",
+  "On THE ROGER Clubhouse Pro — Off-white": "OnCloud - Off-white Roger Clubhouse Pro",
+  "White/gray Jordan 1 Low": "Jordan 1 Low - White/Grey",
+  "Black/white/mocha Jordan 1 Low": "Jordan 1 Low - Black/White/Mocha",
+  "Tobacco #1911 Blundstone": "Blundstone - Brown Suede Boots",
+  "Black dress Blundstone": "Blundstone - Black Dress Boots",
+  "Barbour Ashby Wax Jacket — Navy": "Barbour - Navy Ashby Wax Jacket",
+  "UNIQLO Windproof Stand Collar Blouson — Dark Brown": "UNIQLO - Brown Wind/Rainproof Jacket",
+  "Filson All Season Waxed Rain Jacket — Root": "Filson - Brown All Season Waxed Rain Jacket",
+  "Filson Hyder Quilted Jac-Shirt — Tan": "Filson - Tan Hyder Quilted Jacket",
+  "Filson Ultralight Vest — Warm Tan/Teak": "Filson - Tan/Teak Ultralight Vest",
+  "UNIQLO Bomber Jacket — Green": "UNIQLO - Green Bomber Jacket",
+  "Madewell Denim Trucker Jacket — Black": "Madewell - Black Denim Trucker Jacket",
+  "Reigning Champ Wool Herringbone Scout Coat — Black/Grey": "Reigning - Green Champ Wool Herringbone Scout Coat",
+  "Outdoor Research Shadow Insulated Hooded Jacket": "Outdoor Research - Black Insulated Jacket",
+  "Patagonia Nano Puff — Black": "Patagonia - Green Nano Puff",
+  "Patagonia Down Sweater Jacket — Cool Grey / Navy Zipper": "Patagonia - Zipper Down Sweater Jacket",
+  "Canada Goose quilted liner jacket — Charcoal/Black": "Canada Goose - Black Bomber Jacket",
+  "Loewe quilted jacket — Olive / Brown Corduroy Collar": "Loewe - Green Quilted Jacket",
+  "Abercrombie textured overshirt — Brown/Charcoal Plaid": "Abercrombie - Wool Plaid Overshirt"
+};
+
+  function displayName(value){
+    return value ? (displayNames[value] || value) : value;
+  }
 
   const outfits = [
     ['Chocolate 365','Pale blue/white striped Oxford','Off-white/gold Stan Smith','polished'],
@@ -1134,7 +1217,6 @@ button.recent-love.liked{
     ['Navy 365','UNIQLO soft-woven button-down — Army Green','Tobacco #1911 Blundstone','polished'],
     ['Khaki 365','UNIQLO soft-woven button-down — Green/Navy Check','Tobacco #1911 Blundstone','polished'],
     ['Black 365','UNIQLO soft-woven button-down — Navy/Burgundy Check','Black dress Blundstone','polished'],
-    ['Navy 365','Banana Republic brown micro-check button-down','Black dress Blundstone','polished'],
     ['Khaki 365','Amazon Essentials heavyweight flannel — Charcoal/Black','Tobacco #1911 Blundstone','casual'],    ['Khaki 365','Quince Everyday Fleece Quarter-Zip — Washed Deep Navy','Off-white/gold Stan Smith','casual'],
     ['Chocolate 365','Quince Everyday Fleece Quarter-Zip — Washed Deep Navy','Tobacco #1911 Blundstone','casual'],
     ['Black 365','Quince Everyday Fleece Quarter-Zip — Washed Deep Navy','On THE ROGER Clubhouse Pro — Off-white','casual'],
@@ -1186,7 +1268,7 @@ button.recent-love.liked{
     if (pant.includes('Black')||pant.includes('Navy')||pant.includes('dark')) t.push('dark-pant');
     if (pant.includes('Khaki')) t.push('light-pant');
     if (pant.includes('denim')||pant.includes('jeans')||pant.includes('Levi')) t.push('denim');
-    if (top.includes('stripe')||top.includes('Check')||top.includes('micro-check')) t.push('patterned-top');
+    if (top.includes('stripe')||top.includes('Check')) t.push('patterned-top');
     if (top.includes('Cream')||top.includes('White')||top.includes('Oatmeal')||top.includes('Pale blue')) t.push('light-top');
     if (softWovenTops.includes(top)) t.push('soft-woven');
     if (isSweater(top)) t.push('sweater');
@@ -1388,7 +1470,7 @@ button.recent-love.liked{
     if (!$('fullHistoryPanel').classList.contains('hidden')) renderFullHistory();
     if (!$('yearReviewPanel').classList.contains('hidden')) renderYearReview();
 
-    status.textContent=`Saved ${d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}: ${actual.top}.`;
+    status.textContent=`Saved ${d.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'})}: ${displayName(actual.top)}.`;
     finishSaveButton();
   }
 
@@ -1435,7 +1517,7 @@ button.recent-love.liked{
       const st=document.createElement('strong');
       st.textContent=lab;
       sp.appendChild(st);
-      sp.appendChild(document.createTextNode(val));
+      sp.appendChild(document.createTextNode(displayName(val)));
       pieces.appendChild(sp);
     };
 
@@ -1523,7 +1605,7 @@ button.recent-love.liked{
     const header=['Date','Pants','Top','Shoes','Layer','Liked'];
     const rows=log.map(e=>{
       const liked=isLovedExact(exactOutfitKey(e.pants,e.top,e.shoes,e.layer||''))?'Yes':'No';
-      return [e.date,e.pants,e.top,e.shoes,e.layer||'',liked];
+      return [e.date,displayName(e.pants),displayName(e.top),displayName(e.shoes),displayName(e.layer||''),liked];
     });
 
     const csv=[header,...rows].map(r=>r.map(csvEscape).join(',')).join('\n');
@@ -1560,7 +1642,7 @@ button.recent-love.liked{
     const ol=document.createElement('ol');
     items.forEach(([name,count])=>{
       const li=document.createElement('li');
-      li.textContent=`${name} — ${count} wear${count===1?'':'s'}`;
+      li.textContent=`${displayName(name)} — ${count} wear${count===1?'':'s'}`;
       ol.appendChild(li);
     });
     if(!items.length){
@@ -1592,7 +1674,7 @@ button.recent-love.liked{
 
     const outfitCounts={};
     entries.forEach(e=>{
-      const label=[e.pants,e.top,e.shoes,e.layer||'No layer'].join(' + ');
+      const label=[displayName(e.pants),displayName(e.top),displayName(e.shoes),e.layer?displayName(e.layer):'No layer'].join(' + ');
       outfitCounts[label]=(outfitCounts[label]||0)+1;
     });
 
@@ -1651,7 +1733,7 @@ button.recent-love.liked{
     const mkSelect=(values,selected,none=false)=>{
       const s=document.createElement('select');
       if(none){const o=document.createElement('option');o.value='';o.textContent='No layer';s.appendChild(o);}
-      values.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=v;if(v===selected)o.selected=true;s.appendChild(o);});
+      values.forEach(v=>{const o=document.createElement('option');o.value=v;o.textContent=displayName(v);if(v===selected)o.selected=true;s.appendChild(o);});
       if(none&&!selected)s.value=''; return s;
     };
 
@@ -1661,7 +1743,7 @@ button.recent-love.liked{
       date.textContent=parseLocalDate(entry.date).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'});
       const right=document.createElement('div');
       const pieces=document.createElement('div'); pieces.className='recent-pieces';
-      const add=(lab,val)=>{if(!val)return;const sp=document.createElement('span');sp.className='recent-piece';const st=document.createElement('strong');st.textContent=lab;sp.appendChild(st);sp.appendChild(document.createTextNode(val));pieces.appendChild(sp);};
+      const add=(lab,val)=>{if(!val)return;const sp=document.createElement('span');sp.className='recent-piece';const st=document.createElement('strong');st.textContent=lab;sp.appendChild(st);sp.appendChild(document.createTextNode(displayName(val)));pieces.appendChild(sp);};
       add('Pants',entry.pants); add('Top',entry.top); add('Shoes',entry.shoes); if(entry.layer)add('Layer',entry.layer);
 
       const actions=document.createElement('div'); actions.className='recent-actions';
@@ -1776,7 +1858,6 @@ button.recent-love.liked{
     if (top.includes('rugby')) return 'rugby';
     if (top.includes('denim shirt')) return 'denim';
     if (softWovenTops.includes(top)) return 'softwoven';
-    if (top.includes('brown micro-check')) return 'softwoven';
     if (top.includes('heavyweight flannel')) return 'heavyflannel';
     if (overshirtBaseLayers.includes(top)) return 'baselayer';
     if (isSweater(top)) return 'sweater';
@@ -1912,8 +1993,6 @@ button.recent-love.liked{
     // UNIQLO soft-woven / flannel-adjacent shirts are transitional cool-weather pieces.
     if (softWovenTops.includes(top) && high > 68) return false;
 
-    // Banana Republic brown micro-check is primarily fall/winter/early-spring.
-    if (top.includes('brown micro-check') && high > 66) return false;
 
     // Heavy charcoal flannel is reserved for genuinely chilly days.
     if (top.includes('heavyweight flannel') && high > 58) return false;
@@ -1959,7 +2038,6 @@ button.recent-love.liked{
     const isRugby = top.includes('rugby');
     const isSoftWoven = softWovenTops.includes(top);
     const isHeavyFlannel = top.includes('heavyweight flannel');
-    const isMicroCheck = top.includes('brown micro-check');
     const isBaseLayer = overshirtBaseLayers.includes(top);
 
     const darkPant = pant.includes('Black') || pant.includes('Navy') || pant.includes('dark');
@@ -2285,8 +2363,8 @@ button.recent-love.liked{
     if (pant.includes('ABC')) text += 'ABC pants are polo-first and paired only with Jordan 1s, which keeps the shorter inseam better proportioned. ';
     const layer = chooseOuterwear(o);
     if (layer) {
-      if (rainExpected()) text += `${layer} is added as an optional outer layer because rain is in the forecast. `;
-      else text += `${layer} is an optional layer for the cooler conditions. `;
+      if (rainExpected()) text += `${displayName(layer)} is added as an optional outer layer because rain is in the forecast. `;
+      else text += `${displayName(layer)} is an optional layer for the cooler conditions. `;
     } else {
       text += 'No outer layer is necessary for the forecast. ';
     }
@@ -2333,7 +2411,6 @@ button.recent-love.liked{
     if (top.includes('Hugo Boss')) s += 2;
     if (top.includes('Quince Everyday Fleece Quarter-Zip')) s += 1.2;
     if (top.includes('Green/Navy Check') || top.includes('Navy/Burgundy Check')) s += 3;
-    if (top.includes('brown micro-check')) s += 2.5;
     if (overshirtBaseLayers.includes(top)) s += 5;
     if (top.includes('Oatmeal') || top.includes('Rainforest Green') || top.includes('Espresso')) s += 2;
     if (shoe.includes('Tobacco')) s += 2;
@@ -2378,7 +2455,7 @@ button.recent-love.liked{
     values.forEach(v => {
       const opt = document.createElement('option');
       opt.value = v;
-      opt.textContent = v;
+      opt.textContent = displayName(v);
       if (v === selectedValue) opt.selected = true;
       selectEl.appendChild(opt);
     });
@@ -2414,13 +2491,13 @@ button.recent-love.liked{
 
   function renderProfile(prefix, outfit){
     if (!outfit) return;
-    $(prefix+'Pants').textContent = outfit[0];
-    $(prefix+'Top').textContent = outfit[1];
-    $(prefix+'Shoes').textContent = outfit[2];
+    $(prefix+'Pants').textContent = displayName(outfit[0]);
+    $(prefix+'Top').textContent = displayName(outfit[1]);
+    $(prefix+'Shoes').textContent = displayName(outfit[2]);
 
     const layer = chooseOuterwear(outfit);
     if (layer) {
-      $(prefix+'Outerwear').textContent = layer;
+      $(prefix+'Outerwear').textContent = displayName(layer);
       $(prefix+'OuterwearPiece').classList.remove('hidden');
     } else {
       $(prefix+'Outerwear').textContent = '';
@@ -2502,8 +2579,8 @@ button.recent-love.liked{
 
     const changedText = changed ? ' Your adjusted outfit was logged.' : '';
     $(profile+'WearStatus').textContent = next
-      ? `Marked for ${dayLabel}.${changedText} ${top} won’t be suggested again before ${formatShortDate(next)}.`
-      : `Marked for ${dayLabel}.${changedText} ${top} will be held out for the required rotation window.`;
+      ? `Marked for ${dayLabel}.${changedText} ${displayName(top)} won’t be suggested again before ${formatShortDate(next)}.`
+      : `Marked for ${dayLabel}.${changedText} ${displayName(top)} will be held out for the required rotation window.`;
 
     setTimeout(generate,1100);
   }
@@ -2538,11 +2615,10 @@ button.recent-love.liked{
     if(top.includes('Quince Everyday Fleece Quarter-Zip') && high>62) issues.push('The Quince fleece quarter-zip is too warm for a forecast high above about 62°F.');
     if(top.includes('rugby') && high>72) issues.push('The rugby is warmer/heavier than you usually prefer above a 72°F high.');
     if(softWovenTops.includes(top) && high>68) issues.push('The soft-woven shirt is too warm for this forecast high.');
-    if(top.includes('brown micro-check') && high>66) issues.push('The brown micro-check is too warm for this forecast high.');
     if(top.includes('heavyweight flannel') && high>58) issues.push('The heavyweight flannel is too warm for this forecast high.');
     if(top.includes('Cream waffle thermal') && high>62) issues.push('The waffle thermal is too warm for this forecast high.');
     if(top.includes('Filson thermal shirt — Brown') && high>60) issues.push('The Filson thermal is too warm for this forecast high.');
-    if(layer && !compatibleOuterwear(layer,outfit)) issues.push(`${layer} conflicts with one of your established outfit or weather rules.`);
+    if(layer && !compatibleOuterwear(layer,outfit)) issues.push(`${displayName(layer)} conflicts with one of your established outfit or weather rules.`);
 
     const darkPant=pant.includes('Black')||pant.includes('Navy')||pant.includes('dark');
     const lightTop=top.includes('Cream')||top.includes('White')||top.includes('Oatmeal')||top.includes('Pale blue')||top.includes('stripe');
@@ -2578,7 +2654,7 @@ button.recent-love.liked{
     $('item').innerHTML = '';
     list.forEach(v => {
       const opt = document.createElement('option');
-      opt.value=v; opt.textContent=v; $('item').appendChild(opt);
+      opt.value=v; opt.textContent=displayName(v); $('item').appendChild(opt);
     });
   }
 
@@ -2624,7 +2700,6 @@ button.recent-love.liked{
           if (top.includes('Quince Everyday Fleece Quarter-Zip') && high > 62) return false;
           if (top.includes('rugby') && high > 72) return false;
           if (softWovenTops.includes(top) && high > 68) return false;
-          if (top.includes('brown micro-check') && high > 66) return false;
           if (top.includes('heavyweight flannel') && high > 58) return false;
           if (top.includes('Cream waffle thermal') && high > 62) return false;
     if (top.includes('Filson thermal shirt — Brown') && high > 60) return false;
@@ -2652,7 +2727,7 @@ button.recent-love.liked{
       const div=document.createElement('div');
       div.className='option';
       const layer = category === 'outerwear' ? chosen : chooseOuterwear(o);
-      div.innerHTML=`<strong>Option ${i+1}</strong><div>${o[0]}</div><div>${o[1]}</div><div>${o[2]}</div>${layer ? `<div><em>Optional layer:</em> ${layer}</div>` : ''}`;
+      div.innerHTML=`<strong>Option ${i+1}</strong><div>${displayName(o[0])}</div><div>${displayName(o[1])}</div><div>${displayName(o[2])}</div>${layer ? `<div><em>Optional layer:</em> ${displayName(layer)}</div>` : ''}`;
       $('buildResults').appendChild(div);
     });
   }
