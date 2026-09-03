@@ -712,7 +712,7 @@ button.recent-love.liked{
   <header class="brand">
     <div class="kicker">Daily wardrobe</div>
     <h1>Outfit Picker</h1>
-    <div id="appBuildBadge" class="build-badge">Build 2026.09.02-r1</div>
+    <div id="appBuildBadge" class="build-badge">Build 2026.09.02-r2</div>
     <div class="ornament">■</div>
   </header>
   <div id="appErrorBanner" class="app-error-banner" role="alert"></div>
@@ -1006,7 +1006,7 @@ button.recent-love.liked{
 </div>
 
 <script>
-  window.__WARDROBE_BUILD__ = "2026.09.02-r1";
+  window.__WARDROBE_BUILD__ = "2026.09.02-r2";
   window.addEventListener('error', function(event){
     const banner=document.getElementById('appErrorBanner');
     if(banner){
@@ -1278,10 +1278,12 @@ button.recent-love.liked{
   const loveHistoryKey = 'outfitPickerLoveHistoryV1';
 
   function loadLoveHistory(){
-    try { const a=JSON.parse(localStorage.getItem(loveHistoryKey)||'[]'); return Array.isArray(a)?a:[]; }
-    catch(e){ return []; }
+    try {
+      const a=JSON.parse(localStorage.getItem(loveHistoryKey)||'[]');
+      return Array.isArray(a) ? a.filter(e=>e && typeof e==='object') : [];
+    } catch(e){ return []; }
   }
-  function saveLoveHistory(a){ localStorage.setItem(loveHistoryKey, JSON.stringify(a.slice(-40))); }
+  function saveLoveHistory(a){ try { localStorage.setItem(loveHistoryKey, JSON.stringify(a.slice(-40))); } catch(e){ console.warn('Could not save liked outfits',e); } }
   function exactOutfitKey(pantsValue, topValue, shoesValue, layerValue=''){
     return [pantsValue, topValue, shoesValue, layerValue || ''].join('||');
   }
@@ -1370,14 +1372,28 @@ button.recent-love.liked{
   function loadWearLog(){
     try {
       const log = JSON.parse(localStorage.getItem(wearLogKey) || '[]');
-      return Array.isArray(log) ? log : [];
+      if(!Array.isArray(log)) return [];
+      return log.filter(e=>
+        e && typeof e==='object' &&
+        typeof e.date==='string' &&
+        typeof e.top==='string' &&
+        typeof e.pants==='string' &&
+        typeof e.shoes==='string'
+      ).map(e=>({
+        date:e.date,
+        pants:e.pants,
+        top:e.top,
+        shoes:e.shoes,
+        layer:typeof e.layer==='string' ? e.layer : ''
+      }));
     } catch(e) {
       return [];
     }
   }
 
   function saveWearLog(log){
-    localStorage.setItem(wearLogKey, JSON.stringify(log));
+    try { localStorage.setItem(wearLogKey, JSON.stringify(log)); }
+    catch(e){ console.warn('Could not save wear log',e); }
   }
 
   function rebuildTopWearHistoryFromLog(){
@@ -1831,11 +1847,18 @@ button.recent-love.liked{
 
 
   function loadWearHistory(){
-    try { return JSON.parse(localStorage.getItem(wearHistoryKey) || '{}'); }
-    catch(e){ return {}; }
+    try {
+      const parsed=JSON.parse(localStorage.getItem(wearHistoryKey) || '{}');
+      if(parsed && typeof parsed==='object' && !Array.isArray(parsed)) return parsed;
+    } catch(e) {}
+    const rebuilt={};
+    loadWearLog().filter(e=>e&&e.date&&e.top).sort((a,b)=>a.date.localeCompare(b.date))
+      .forEach(e=>{rebuilt[e.top]=e.date;});
+    try { localStorage.setItem(wearHistoryKey, JSON.stringify(rebuilt)); } catch(e) {}
+    return rebuilt;
   }
 
-  function saveWearHistory(h){ localStorage.setItem(wearHistoryKey, JSON.stringify(h)); }
+  function saveWearHistory(h){ try { localStorage.setItem(wearHistoryKey, JSON.stringify(h)); } catch(e){ console.warn('Could not save rotation history',e); } }
 
   function localDateString(date=new Date()){
     const y=date.getFullYear(), m=String(date.getMonth()+1).padStart(2,'0'), d=String(date.getDate()).padStart(2,'0');
@@ -2562,8 +2585,9 @@ button.recent-love.liked{
   }
 
   function generate(){
-    $('skipStatus').textContent = '';
-    const pool = filteredPool();
+    try {
+      $('skipStatus').textContent = '';
+      const pool = filteredPool();
     if (!pool.length) {
       $('outfitResult').classList.add('hidden');
       return;
@@ -2593,8 +2617,21 @@ button.recent-love.liked{
 
     renderProfile('practical', currentDailyOptions.practical);
     renderProfile('balanced', currentDailyOptions.balanced);
-    renderProfile('style', currentDailyOptions.style);
-    $('outfitResult').classList.remove('hidden');
+      renderProfile('style', currentDailyOptions.style);
+      $('outfitResult').classList.remove('hidden');
+      const banner=$('appErrorBanner');
+      if(banner && banner.textContent.includes('Generate failed')) {
+        banner.textContent='';
+        banner.classList.remove('show');
+      }
+    } catch(err) {
+      const banner=$('appErrorBanner');
+      if(banner) {
+        banner.textContent=`Generate failed in build ${window.__WARDROBE_BUILD__}: ${err && err.message ? err.message : String(err)}`;
+        banner.classList.add('show');
+      }
+      console.error(err);
+    }
   }
 
   function confirmWorn(profile){
@@ -2881,33 +2918,52 @@ button.recent-love.liked{
     });
   }
 
-  $('loadLocationBtn').addEventListener('click', loadEnteredLocation);
-  $('forecastDay').addEventListener('change', loadEnteredLocation);
-  $('locationInput').addEventListener('keydown', e=>{if(e.key==='Enter') loadEnteredLocation();});
-  $('generateBtn').addEventListener('click', generate);
-  $('anotherBtn').addEventListener('click', generate);
-  $('skipBtn').addEventListener('click', skipToday);
-  $('practicalWoreBtn').addEventListener('click', ()=>confirmWorn('practical'));
-  $('balancedWoreBtn').addEventListener('click', ()=>confirmWorn('balanced'));
-  $('styleWoreBtn').addEventListener('click', ()=>confirmWorn('style'));
-  $('category').addEventListener('change', refreshItems);
-  $('buildBtn').addEventListener('click', buildAround);
+  function safeOn(id,event,handler){
+    const el=$(id);
+    if(!el) {
+      console.warn(`Missing UI control: ${id}`);
+      return;
+    }
+    el.addEventListener(event,handler);
+  }
 
-  $('savePastOutfitBtn').addEventListener('click', savePastOutfit);
-  $('viewAllWorkwearBtn').addEventListener('click', toggleFullHistory);
-  $('exportWorkwearCsvBtn').addEventListener('click', exportWorkwearCsv);
-  $('yearReviewBtn').addEventListener('click', toggleYearReview);
-  $('checkOutfitBtn').addEventListener('click', analyzeCheckedOutfit);
-  $('practicalLoveBtn').addEventListener('click', ()=>saveLovedOutfit('practical'));
-  $('balancedLoveBtn').addEventListener('click', ()=>saveLovedOutfit('balanced'));
-  $('styleLoveBtn').addEventListener('click', ()=>saveLovedOutfit('style'));
+  // Wire controls first so a secondary initialization problem can never disable every button.
+  safeOn('loadLocationBtn','click',loadEnteredLocation);
+  safeOn('forecastDay','change',loadEnteredLocation);
+  safeOn('locationInput','keydown',e=>{if(e.key==='Enter') loadEnteredLocation();});
+  safeOn('generateBtn','click',generate);
+  safeOn('anotherBtn','click',generate);
+  safeOn('skipBtn','click',skipToday);
+  safeOn('practicalWoreBtn','click',()=>confirmWorn('practical'));
+  safeOn('balancedWoreBtn','click',()=>confirmWorn('balanced'));
+  safeOn('styleWoreBtn','click',()=>confirmWorn('style'));
+  safeOn('category','change',refreshItems);
+  safeOn('buildBtn','click',buildAround);
+  safeOn('savePastOutfitBtn','click',savePastOutfit);
+  safeOn('viewAllWorkwearBtn','click',toggleFullHistory);
+  safeOn('exportWorkwearCsvBtn','click',exportWorkwearCsv);
+  safeOn('yearReviewBtn','click',toggleYearReview);
+  safeOn('checkOutfitBtn','click',analyzeCheckedOutfit);
+  safeOn('practicalLoveBtn','click',()=>saveLovedOutfit('practical'));
+  safeOn('balancedLoveBtn','click',()=>saveLovedOutfit('balanced'));
+  safeOn('styleLoveBtn','click',()=>saveLovedOutfit('style'));
 
-  refreshItems();
-  populateOutfitChecker();
-  populatePastOutfitForm();
-  wireActualOutfitLoveRefresh();
-  refreshCurrentLoveButtons();
-  renderRecentWorkwear();
+  const initSteps=[
+    ['item picker',refreshItems],
+    ['outfit checker',populateOutfitChecker],
+    ['past outfit form',populatePastOutfitForm],
+    ['outfit edit listeners',wireActualOutfitLoveRefresh],
+    ['liked outfit state',refreshCurrentLoveButtons],
+    ['recent workwear',renderRecentWorkwear]
+  ];
+  initSteps.forEach(([name,fn])=>{
+    try { fn(); }
+    catch(err) { console.warn(`Initialization skipped (${name}):`,err); }
+  });
+
+  const buildBadge=$('appBuildBadge');
+  if(buildBadge) buildBadge.textContent=`Build ${window.__WARDROBE_BUILD__} · App ready`;
+
   loadWeatherForLocation('Bellevue, WA').catch(()=>{
     $('weatherStatus').textContent='Could not automatically load Bellevue weather. Tap “Load weather” to try again.';
   });
