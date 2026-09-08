@@ -712,7 +712,7 @@ button.recent-love.liked{
   <header class="brand">
     <div class="kicker">Daily wardrobe</div>
     <h1>Outfit Picker</h1>
-    <div id="appBuildBadge" class="build-badge">Build 2026.09.02-r2</div>
+    <div id="appBuildBadge" class="build-badge">Build 2026.09.08-mobile2 · Mobile compatible</div>
     <div class="ornament">■</div>
   </header>
   <div id="appErrorBanner" class="app-error-banner" role="alert"></div>
@@ -1006,7 +1006,33 @@ button.recent-love.liked{
 </div>
 
 <script>
-  window.__WARDROBE_BUILD__ = "2026.09.02-r2";
+
+  // Lightweight compatibility helpers for older mobile Safari/WebViews.
+  if (!String.prototype.padStart) {
+    String.prototype.padStart = function(targetLength, padString) {
+      targetLength = targetLength >> 0;
+      padString = String(padString !== undefined ? padString : ' ');
+      if (this.length >= targetLength) return String(this);
+      targetLength = targetLength - this.length;
+      if (targetLength > padString.length) {
+        padString += padString.repeat(Math.ceil(targetLength / padString.length));
+      }
+      return padString.slice(0, targetLength) + String(this);
+    };
+  }
+  if (!String.prototype.repeat) {
+    String.prototype.repeat = function(count) {
+      if (count < 0 || count === Infinity) throw new RangeError('Invalid count value');
+      return new Array(count + 1).join(String(this));
+    };
+  }
+  if (!Array.prototype.includes) {
+    Array.prototype.includes = function(searchElement, fromIndex) {
+      return this.indexOf(searchElement, fromIndex || 0) !== -1;
+    };
+  }
+
+  window.__WARDROBE_BUILD__ = "2026.09.08-mobile2";
   window.addEventListener('error', function(event){
     const banner=document.getElementById('appErrorBanner');
     if(banner){
@@ -1036,6 +1062,7 @@ button.recent-love.liked{
     'Hugo Boss lightweight quarter-zip — Cream',
     'Quince Everyday Fleece Quarter-Zip — Washed Deep Navy',
     'Marine Layer Inverness Crewneck — Oatmeal',
+    'Marine Layer Espresso Crewneck Sweatshirt',
     'Lululemon Textured Knit Crewneck — Heathered Classic Navy',
     'Lululemon Textured Knit Crewneck — Rainforest Green',
     'Lululemon Textured Knit Crewneck — Heathered Black/Charcoal',
@@ -1091,6 +1118,7 @@ button.recent-love.liked{
     'Abercrombie textured overshirt — Brown/Charcoal Plaid'];
 
   const displayNames = {
+  "Marine Layer Espresso Crewneck Sweatshirt": "Marine Layer - Espresso Crewneck Sweatshirt",
   "Chocolate 365": "Chocolate 365 Trousers",
   "Navy 365": "Navy 365 Trousers",
   "Khaki 365": "Khaki 365 Trousers",
@@ -1266,7 +1294,10 @@ button.recent-love.liked{
     ['Chocolate 365','Quince Everyday Fleece Quarter-Zip — Washed Deep Navy','Tobacco #1911 Blundstone','casual'],
     ['Black 365','Quince Everyday Fleece Quarter-Zip — Washed Deep Navy','On THE ROGER Clubhouse Pro — Off-white','casual'],
     ['F&T medium/dark athletic-taper jeans','Quince Everyday Fleece Quarter-Zip — Washed Deep Navy','Tobacco #1911 Blundstone','casual'],
-    ['Marine Layer Flex Terry Cords — Dark Brown','Quince Everyday Fleece Quarter-Zip — Washed Deep Navy','Tobacco #1911 Blundstone','casual'],
+    ['Marine Layer Flex Terry Cords — Dark Brown','Quince Everyday Fleece Quarter-Zip — Washed Deep Navy','Tobacco #1911 Blundstone','casual'],    ['Levi’s 502 medium wash','Marine Layer Espresso Crewneck Sweatshirt','White/gray Jordan 1 Low','casual'],
+    ['Khaki 365','Marine Layer Espresso Crewneck Sweatshirt','On THE ROGER Clubhouse Pro — Off-white','casual'],
+    ['Black 365','Marine Layer Espresso Crewneck Sweatshirt','Off-white/gold Stan Smith','casual'],
+    ['Chocolate 365','Marine Layer Espresso Crewneck Sweatshirt','Tobacco #1911 Blundstone','casual'],
   ];
 
   let wx = null;
@@ -1652,8 +1683,8 @@ button.recent-love.liked{
   }
 
   function csvEscape(value){
-    const s=String(value??'');
-    return `"${s.replaceAll('"','""')}"`;
+    const s=String(value == null ? '' : value);
+    return '"' + s.replace(/"/g,'""') + '"';
   }
 
   function exportWorkwearCsv(){
@@ -1761,9 +1792,9 @@ button.recent-love.liked{
     const topCounts=countItems(entries,'top');
     const pantCounts=countItems(entries,'pants');
     addRanking(grid,'Most-worn tops',sortedCounts(topCounts).slice(0,5));
-    addRanking(grid,'Least-worn tops',sortedCounts(Object.fromEntries(tops.map(v=>[v,topCounts[v]||0])),true).slice(0,5));
+    addRanking(grid,'Least-worn tops',sortedCounts(tops.reduce(function(acc,v){acc[v]=topCounts[v]||0;return acc;},{}),true).slice(0,5));
     addRanking(grid,'Most-worn pants',sortedCounts(pantCounts).slice(0,5));
-    addRanking(grid,'Least-worn pants',sortedCounts(Object.fromEntries(pants.map(v=>[v,pantCounts[v]||0])),true).slice(0,5));
+    addRanking(grid,'Least-worn pants',sortedCounts(pants.reduce(function(acc,v){acc[v]=pantCounts[v]||0;return acc;},{}),true).slice(0,5));
 
     content.appendChild(grid);
   }
@@ -1866,7 +1897,8 @@ button.recent-love.liked{
   }
   function selectedWearDate(){
     const d = new Date();
-    const offset = Number($('forecastDay')?.value || 0);
+    const forecastDayEl = $('forecastDay');
+    const offset = Number((forecastDayEl && forecastDayEl.value) || 0);
     d.setDate(d.getDate() + offset);
     d.setHours(12,0,0,0);
     return d;
@@ -2048,6 +2080,7 @@ button.recent-love.liked{
     // Sweater ceilings. The Boss quarter-zip is the lightest sweater.
     if (top.includes('Hugo Boss') && high > 67) return false;
     if (top.includes('Quince Everyday Fleece Quarter-Zip') && high > 62) return false;
+    if (top === 'Marine Layer Espresso Crewneck Sweatshirt' && high > 74) return false;
     if (isSweater(top) && !top.includes('Hugo Boss') && !top.includes('Quince Everyday Fleece Quarter-Zip') && high > 64) return false;
     if (top.includes('Waterfowl') && high > 50) return false;
 
@@ -2420,6 +2453,7 @@ button.recent-love.liked{
     if (isSweater(top)) text += 'A sweater is appropriate for the cooler temperature. ';
     if (top.includes('Waterfowl')) text += 'The heavier Waterfowl sweater is being reserved for genuinely cold conditions. ';
     if (top.includes('Quince Everyday Fleece Quarter-Zip')) text += 'The Quince fleece quarter-zip is a warmer, more casual layer than the lightweight Boss quarter-zip and works best on genuinely cool days. ';
+    if (top === 'Marine Layer Espresso Crewneck Sweatshirt') text += 'The espresso crewneck sweatshirt stays eligible into warmer office days because air conditioning can make the office feel cool, but it is filtered out at a 75°F forecast high or above. ';
     if (softWovenTops.includes(top)) text += 'The soft-woven cotton shirt adds flannel-like texture without the weight of a true heavy flannel. ';
     if (top.includes('heavyweight flannel')) text += 'The heavyweight charcoal flannel is reserved for genuinely chilly days. ';
     if (overshirtBaseLayers.includes(top)) text += 'This base layer is paired specifically with the Abercrombie overshirt for an easy removable chilly-day layer. ';
@@ -2541,10 +2575,10 @@ button.recent-love.liked{
     const suggested = currentDailyOptions[profile];
     if (!suggested) return null;
     return {
-      pants: $(profile+'ActualPants')?.value || suggested[0],
-      top: $(profile+'ActualTop')?.value || suggested[1],
-      shoes: $(profile+'ActualShoes')?.value || suggested[2],
-      layer: $(profile+'ActualLayer')?.value || ''
+      pants: ($(profile+'ActualPants') && $(profile+'ActualPants').value) || suggested[0],
+      top: ($(profile+'ActualTop') && $(profile+'ActualTop').value) || suggested[1],
+      shoes: ($(profile+'ActualShoes') && $(profile+'ActualShoes').value) || suggested[2],
+      layer: ($(profile+'ActualLayer') && $(profile+'ActualLayer').value) || ''
     };
   }
 
@@ -2649,7 +2683,8 @@ button.recent-love.liked{
     renderRecentWorkwear();
 
     const next = nextEligibleDateForTop(top);
-    const dayLabel = Number($('forecastDay')?.value || 0) === 1 ? 'tomorrow' : 'today';
+    const fdEl = $('forecastDay');
+    const dayLabel = Number((fdEl && fdEl.value) || 0) === 1 ? 'tomorrow' : 'today';
 
     const suggested = currentDailyOptions[profile];
     const changed = suggested && (
@@ -2695,6 +2730,7 @@ button.recent-love.liked{
     if(isBoot && t>=65) issues.push('Boots are heavier than you usually want at this temperature.');
     if(top.includes('denim shirt') && high>77) issues.push('The denim shirt is too warm for a forecast high above about 77°F.');
     if(top.includes('Quince Everyday Fleece Quarter-Zip') && high>62) issues.push('The Quince fleece quarter-zip is too warm for a forecast high above about 62°F.');
+    if(top === 'Marine Layer Espresso Crewneck Sweatshirt' && high>74) issues.push('The Marine Layer espresso crewneck sweatshirt is too warm for a forecast high of 75°F or above.');
     if(top.includes('rugby') && high>72) issues.push('The rugby is warmer/heavier than you usually prefer above a 72°F high.');
     if(softWovenTops.includes(top) && high>68) issues.push('The soft-woven shirt is too warm for this forecast high.');
     if(top.includes('heavyweight flannel') && high>58) issues.push('The heavyweight flannel is too warm for this forecast high.');
@@ -2780,6 +2816,7 @@ button.recent-love.liked{
           if (pant.includes('Flex Terry Cords') && (month < 10 && month > 3)) return false;
           if (top.includes('denim shirt') && high > 77) return false;
           if (top.includes('Quince Everyday Fleece Quarter-Zip') && high > 62) return false;
+          if (top === 'Marine Layer Espresso Crewneck Sweatshirt' && high > 74) return false;
           if (top.includes('rugby') && high > 72) return false;
           if (softWovenTops.includes(top) && high > 68) return false;
           if (top.includes('heavyweight flannel') && high > 58) return false;
