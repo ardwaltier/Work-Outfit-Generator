@@ -712,7 +712,7 @@ button.recent-love.liked{
   <header class="brand">
     <div class="kicker">Daily wardrobe</div>
     <h1>Outfit Picker</h1>
-    <div id="appBuildBadge" class="build-badge">Build 2026.09.08-mobile2 · Mobile compatible</div>
+    <div id="appBuildBadge" class="build-badge">Build 2026.09.08-mobile3 · Mobile compatible</div>
     <div class="ornament">■</div>
   </header>
   <div id="appErrorBanner" class="app-error-banner" role="alert"></div>
@@ -1032,7 +1032,7 @@ button.recent-love.liked{
     };
   }
 
-  window.__WARDROBE_BUILD__ = "2026.09.08-mobile2";
+  window.__WARDROBE_BUILD__ = "2026.09.08-mobile3";
   window.addEventListener('error', function(event){
     const banner=document.getElementById('appErrorBanner');
     if(banner){
@@ -1327,7 +1327,9 @@ button.recent-love.liked{
     if (!button) return;
     button.classList.toggle('liked', liked);
     button.textContent = liked ? 'Liked ✓' : 'I liked this outfit';
-    button.disabled = liked;
+    button.disabled = false;
+    button.setAttribute('aria-pressed', liked ? 'true' : 'false');
+    button.title = liked ? 'Tap to remove this liked outfit' : 'Tap to save this outfit as a style preference';
   }
 
   function refreshCurrentLoveButtons(){
@@ -1379,9 +1381,17 @@ button.recent-love.liked{
     if(!a) return;
 
     const exactKey=exactOutfitKey(a.pants,a.top,a.shoes,a.layer||'');
+    const btn=$(profile+'LoveBtn');
+    const status=$(profile+'LoveStatus');
+
     if(isLovedExact(exactKey)){
-      setLoveButtonState($(profile+'LoveBtn'), true);
-      $(profile+'LoveStatus').textContent='Already saved as a style preference.';
+      const h=loadLoveHistory().filter(entry=>entry.exactKey!==exactKey);
+      saveLoveHistory(h);
+      setLoveButtonState(btn, false);
+      if(status) status.textContent='Removed from style preferences.';
+      renderRecentWorkwear();
+      if(!$('fullHistoryPanel').classList.contains('hidden')) renderFullHistory();
+      refreshCurrentLoveButtons();
       return;
     }
 
@@ -1394,9 +1404,10 @@ button.recent-love.liked{
     });
     saveLoveHistory(h);
 
-    setLoveButtonState($(profile+'LoveBtn'), true);
-    $(profile+'LoveStatus').textContent='Saved as a style preference.';
+    setLoveButtonState(btn, true);
+    if(status) status.textContent='Saved as a style preference.';
     renderRecentWorkwear();
+    if(!$('fullHistoryPanel').classList.contains('hidden')) renderFullHistory();
   }
 
 
@@ -1439,7 +1450,11 @@ button.recent-love.liked{
     const exactKey=exactOutfitKey(entry.pants,entry.top,entry.shoes,entry.layer||'');
 
     if(isLovedExact(exactKey)){
-      setLoveButtonState(button, true);
+      const h=loadLoveHistory().filter(saved=>saved.exactKey!==exactKey);
+      saveLoveHistory(h);
+      setLoveButtonState(button, false);
+      refreshCurrentLoveButtons();
+      if(!$('fullHistoryPanel').classList.contains('hidden')) renderFullHistory();
       return;
     }
 
@@ -1454,6 +1469,7 @@ button.recent-love.liked{
 
     setLoveButtonState(button, true);
     refreshCurrentLoveButtons();
+    if(!$('fullHistoryPanel').classList.contains('hidden')) renderFullHistory();
   }
 
   function updateWearLogEntry(dateStr, updated){
