@@ -712,7 +712,7 @@ button.recent-love.liked{
   <header class="brand">
     <div class="kicker">Daily wardrobe</div>
     <h1>Outfit Picker</h1>
-    <div id="appBuildBadge" class="build-badge">Build 2026.09.14-mobile4 · Mobile compatible · Rebuilt from known-good baseline</div>
+    <div id="appBuildBadge" class="build-badge">Build 2026.09.23-mobile6 · Mobile compatible · Rebuilt from known-good baseline</div>
     <div class="ornament">■</div>
   </header>
   <div id="appErrorBanner" class="app-error-banner" role="alert"></div>
@@ -1032,7 +1032,7 @@ button.recent-love.liked{
     };
   }
 
-  window.__WARDROBE_BUILD__ = "2026.09.14-mobile4";
+  window.__WARDROBE_BUILD__ = "2026.09.23-mobile6";
   window.addEventListener('error', function(event){
     const banner=document.getElementById('appErrorBanner');
     if(banner){
@@ -1098,7 +1098,8 @@ button.recent-love.liked{
 
   const shoes = [
     'Off-white/gold Stan Smith','On THE ROGER Clubhouse Pro — Off-white','White/gray Jordan 1 Low','Black/white/mocha Jordan 1 Low',
-    'Tobacco #1911 Blundstone','Black dress Blundstone'
+    'Tobacco #1911 Blundstone','Black dress Blundstone',
+    'Cole Haan GrandPro Crossover Sneakers — Black'
   ];
 
   const outerwear = [
@@ -1118,6 +1119,7 @@ button.recent-love.liked{
     'Abercrombie textured overshirt — Brown/Charcoal Plaid'];
 
   const displayNames = {
+  "Cole Haan GrandPro Crossover Sneakers — Black": "Cole Haan - Black GrandPrø Crossover Sneakers",
   "Marine Layer Espresso Crewneck Sweatshirt": "Marine Layer - Espresso Crewneck Sweatshirt",
   "Chocolate 365": "Chocolate 365 Trousers",
   "Navy 365": "Navy 365 Trousers",
@@ -1294,7 +1296,10 @@ button.recent-love.liked{
     ['Chocolate 365','Quince Everyday Fleece Quarter-Zip — Washed Deep Navy','Tobacco #1911 Blundstone','casual'],
     ['Black 365','Quince Everyday Fleece Quarter-Zip — Washed Deep Navy','On THE ROGER Clubhouse Pro — Off-white','casual'],
     ['F&T medium/dark athletic-taper jeans','Quince Everyday Fleece Quarter-Zip — Washed Deep Navy','Tobacco #1911 Blundstone','casual'],
-    ['Marine Layer Flex Terry Cords — Dark Brown','Quince Everyday Fleece Quarter-Zip — Washed Deep Navy','Tobacco #1911 Blundstone','casual'],
+    ['Marine Layer Flex Terry Cords — Dark Brown','Quince Everyday Fleece Quarter-Zip — Washed Deep Navy','Tobacco #1911 Blundstone','casual'],    ['Navy 365','Pale blue/white striped Oxford','Cole Haan GrandPro Crossover Sneakers — Black','polished'],
+    ['Khaki 365','Navy pique polo','Cole Haan GrandPro Crossover Sneakers — Black','casual'],
+    ['Black 365','Banana Republic tan/white striped button-down','Cole Haan GrandPro Crossover Sneakers — Black','polished'],
+    ['F&T medium/dark athletic-taper jeans','Hugo Boss lightweight quarter-zip — Cream','Cole Haan GrandPro Crossover Sneakers — Black','casual'],
   ];
 
   let wx = null;
@@ -1351,6 +1356,7 @@ button.recent-love.liked{
     if (shoe.includes('THE ROGER')||shoe.includes('Stan Smith')) t.push('offwhite-sneaker');
     if (shoe.includes('Jordan')) t.push('jordan');
     if (shoe.includes('Blundstone')) t.push('boot');
+    if (shoe.includes('Cole Haan GrandPro Crossover')) t.push('colehaan-sneaker');
     if (layer.includes('Barbour')) t.push('barbour');
     if (layer.includes('Loewe')) t.push('loewe');
     if (layer.includes('Abercrombie textured overshirt')) t.push('overshirt');
@@ -2094,7 +2100,11 @@ button.recent-love.liked{
     if (top.includes('Hugo Boss') && high > 67) return false;
     if (top.includes('Quince Everyday Fleece Quarter-Zip') && high > 62) return false;
     if (top === 'Marine Layer Espresso Crewneck Sweatshirt' && high > 74) return false;
-    if (isSweater(top) && !top.includes('Hugo Boss') && !top.includes('Quince Everyday Fleece Quarter-Zip') && high > 64) return false;
+    if (isSweater(top) &&
+        !top.includes('Hugo Boss') &&
+        !top.includes('Quince Everyday Fleece Quarter-Zip') &&
+        top !== 'Marine Layer Espresso Crewneck Sweatshirt' &&
+        high > 64) return false;
     if (top.includes('Waterfowl') && high > 50) return false;
 
     // Cords are cool-weather and seasonal.
@@ -2142,6 +2152,7 @@ button.recent-love.liked{
 
     const isBoot = shoe.includes('Blundstone');
     const isBlackBoot = shoe.includes('Black dress');
+    // These are local to outerwear scoring; keep them defined here because this path runs only when a layer is needed.
     const isTobaccoBoot = shoe.includes('Tobacco');
     const isJordan = shoe.includes('Jordan');
     const isStan = shoe.includes('Stan Smith');
@@ -2287,6 +2298,8 @@ button.recent-love.liked{
     const rain = rainExpected();
     const fallWinter = month >= 9 || month <= 2;
     const polished = dress === 'polished';
+    const isJean = pant.includes('jeans') || pant.includes('Levi') || pant.includes('denim');
+    const isTobaccoBoot = shoe.includes('Tobacco');
     const warmColors = pant.includes('Chocolate') || pant.includes('Khaki') || pant.includes('Green') ||
                        top.includes('Cream') || top.includes('Oatmeal') || top.includes('Espresso');
     const darkOutfit = pant.includes('Black') || pant.includes('Navy') ||
