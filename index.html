@@ -712,7 +712,7 @@ button.recent-love.liked{
   <header class="brand">
     <div class="kicker">Daily wardrobe</div>
     <h1>Outfit Picker</h1>
-    <div id="appBuildBadge" class="build-badge">Build 2026.09.23-mobile7 · Mobile compatible · Rebuilt from known-good baseline</div>
+    <div id="appBuildBadge" class="build-badge">Build 2026.09.30-mobile10 · Mobile compatible · Rebuilt from known-good baseline</div>
     <div class="ornament">■</div>
   </header>
   <div id="appErrorBanner" class="app-error-banner" role="alert"></div>
@@ -993,9 +993,9 @@ button.recent-love.liked{
 
   <details>
     <summary>How recommendations work</summary>
-    <div class="details-body"><strong>Weather wins:</strong> choose Today or Tomorrow; the selected day’s temperature, feels-like temperature, forecast high and precipitation are the strongest inputs.
+    <div class="details-body"><strong>Weather wins:</strong> Daily recommendations intentionally exclude outerwear; jackets are manual-only. choose Today or Tomorrow; the selected day’s temperature, feels-like temperature, forecast high and precipitation are the strongest inputs.
       The cream Hugo Boss quarter-zip is your lightest sweater. The washed-deep-navy Quince fleece quarter-zip is warmer and more casual, with a hard forecast-high ceiling around 62°F. The cream Hugo Boss quarter-zip and can appear into the mid-60s; heavier sweaters are held for cooler weather, and the L.L.Bean Waterfowl sweater is reserved mostly for sub-50°F days.
-      Outerwear is optional rather than part of every office outfit. The charcoal Canada Goose quilted liner is a high-priority winter workday layer for cold, mostly dry conditions or light rain when outdoor exposure is brief. The navy Barbour Ashby remains the preferred cool/wet fall-winter jacket, while the dark-brown UNIQLO blouson is the year-round mild-rain backup. The olive Loewe quilted jacket is a style-forward cool-weather option for mostly dry days. Warm, dry summer days generally get no jacket suggestion.
+      Outerwear is manual-only. Daily recommendations focus on pants, top, and shoes; jackets and layers can still be selected when logging or checking an outfit.
       Dark-brown cords are primarily October–March and are excluded in warmer weather.
       Forecast high is the hard ceiling for warm/heavy tops: the denim shirt to about 77°F, rugby shirts can go up to 72°F, soft-woven shirts to about 68°F, the cream waffle thermal to 62°F, the brown Filson thermal to 60°F, and the heavyweight charcoal flannel to about 58°F. Effective temperature still helps rank eligible outfits, but it cannot override those ceilings.
       Your 28″ ABC pants are polo-first and Jordan-only—boots and Stan Smiths are excluded with them.
@@ -1032,7 +1032,7 @@ button.recent-love.liked{
     };
   }
 
-  window.__WARDROBE_BUILD__ = "2026.09.23-mobile7";
+  window.__WARDROBE_BUILD__ = "2026.09.30-mobile10";
   window.addEventListener('error', function(event){
     const banner=document.getElementById('appErrorBanner');
     if(banner){
@@ -1299,7 +1299,10 @@ button.recent-love.liked{
     ['Marine Layer Flex Terry Cords — Dark Brown','Quince Everyday Fleece Quarter-Zip — Washed Deep Navy','Tobacco #1911 Blundstone','casual'],    ['Navy 365','Pale blue/white striped Oxford','Cole Haan GrandPro Crossover Sneakers — Black','polished'],
     ['Khaki 365','Navy pique polo','Cole Haan GrandPro Crossover Sneakers — Black','casual'],
     ['Black 365','Banana Republic tan/white striped button-down','Cole Haan GrandPro Crossover Sneakers — Black','polished'],
-    ['F&T medium/dark athletic-taper jeans','Hugo Boss lightweight quarter-zip — Cream','Cole Haan GrandPro Crossover Sneakers — Black','casual'],
+    ['F&T medium/dark athletic-taper jeans','Hugo Boss lightweight quarter-zip — Cream','Cole Haan GrandPro Crossover Sneakers — Black','casual'],    ['Navy ABC 28″','Lululemon Textured Knit Crewneck — Heathered Classic Navy','White/gray Jordan 1 Low','casual'],
+    ['Navy ABC 28″','Lululemon Textured Knit Crewneck — Heathered Black/Charcoal','Black/white/mocha Jordan 1 Low','casual'],
+    ['Green ABC 28″','Lululemon Textured Knit Crewneck — Heathered Classic Navy','White/gray Jordan 1 Low','casual'],
+    ['Green ABC 28″','Lululemon Textured Knit Crewneck — Heathered Black/Charcoal','Black/white/mocha Jordan 1 Low','casual'],
   ];
 
   let wx = null;
@@ -2079,6 +2082,9 @@ button.recent-love.liked{
     const isJordan = shoe.includes('Jordan 1');
     const isStan = shoe.includes('Stan Smith');
     const isOn = shoe.includes('THE ROGER Clubhouse Pro');
+
+    // User preference: keep OnCloud / THE ROGER shoes available for logging, but never auto-recommend them.
+    if (isOn) return false;
     const isABC = pant.includes('ABC');
     const isRugby = top.includes('rugby');
     const isCord = pant.includes('Flex Terry Cords');
@@ -2086,9 +2092,26 @@ button.recent-love.liked{
 
     if (!topEligibleByWearHistory(top, selectedWearDate())) return false;
 
-    // HARD RULE: ABC pants are polo-first and Jordan-only.
-    if (isABC && !top.includes('polo')) return false;
+    // HARD RULE: ABC pants are Jordan-only.
+    // In cool weather (<65°F forecast high), Lululemon knit crewneck sweaters are also a favorite ABC pairing.
     if (isABC && !isJordan) return false;
+    if (isABC) {
+      const isLuluCrewneck = top.includes('Lululemon Textured Knit Crewneck');
+      const abcTopAllowed = top.includes('polo') || (isLuluCrewneck && high < 65);
+      if (!abcTopAllowed) return false;
+    }
+    // Favorite ABC + Lululemon sweater + Jordan outfit:
+    // strong in cool weather, but not for genuinely cold or wet conditions.
+    if (isABC && top.includes('Lululemon Textured Knit Crewneck') && isJordan) {
+      if (t < 40) return false;
+      if (rainExpected() && wx && wx.precip >= 0.10) return false;
+    }
+    // Long-sleeve pique polos are too light for genuinely cold weather.
+    if (top.includes('pique polo')) {
+      if (t < 45) return false;
+      if (rainExpected() && t < 50) return false;
+    }
+    if (pant.includes('Green ABC') && top.includes('Rainforest Green')) return false;
 
     // HARD RULE: Never suggest boots May through September.
     if (isBoot && month >= 5 && month <= 9) return false;
@@ -2190,7 +2213,6 @@ button.recent-love.liked{
       if (isCord) s += 4;
     } else if (cls === 'mild-dry') {
       if (isStan) s += 4.5;
-      if (isOn) s += 4;
       if (isJordan) s += 3.5;
       if (top.includes('Oxford') || top.includes('polo')) s += 3;
       if (isSweater(top) && t <= 61) s += 4;
@@ -2198,14 +2220,13 @@ button.recent-love.liked{
       if (isRugby && high <= 72) s += 2.5;
     } else if (cls === 'warm-dry') {
       if (isStan) s += 7;
-      if (isOn) s += 6.5;
       if (isJordan) s += 6;
       if (top.includes('polo')) s += 5;
       if (top.includes('Oxford')) s += 2;
     }
 
     // Warm-weather sneaker priority.
-    if (t >= 68 && (isStan || isOn || isJordan)) s += 4;
+    if (t >= 68 && (isStan || isJordan)) s += 4;
 
     // MONTH / SEASON: smaller bias.
     if (bias.includes('fall') || bias === 'winter') {
@@ -2214,7 +2235,7 @@ button.recent-love.liked{
       if (isSweater(top) || isRugby) s += 1.5;
     }
     if (bias.includes('spring') || bias === 'summer') {
-      if (isStan || isOn || isJordan) s += 2;
+      if (isStan || isJordan) s += 2;
       if (top.includes('stripe') || top.includes('Pale-blue') || top.includes('polo')) s += 1;
     }
 
@@ -2222,14 +2243,14 @@ button.recent-love.liked{
     if (top.includes('Banana Republic tan/white striped')) {
       if (pant.includes('Navy') || pant.includes('Chocolate') || pant.includes('Khaki') ||
           pant.includes('Green') || isJean) s += 3;
-      if (isTobaccoBoot || isStan || isOn || isJordan) s += 1.5;
+      if (isTobaccoBoot || isStan || isJordan) s += 1.5;
     }
 
     // CONTRAST RULES.
     if (darkPant && lightTop) s += 3;
     if (lightPant && darkTop) s += 3;
     if (darkPant && darkTop) {
-      if (isStan || isOn || shoe.includes('White/gray')) s += 2;
+      if (isStan || shoe.includes('White/gray')) s += 2;
       else s -= 2;
     }
 
@@ -2455,20 +2476,13 @@ button.recent-love.liked{
     return true;
   }
 
+
   function chooseOuterwear(outfit, forcedLayer=null){
-    if (forcedLayer) return compatibleOuterwear(forcedLayer, outfit) ? forcedLayer : null;
-    if (overshirtBaseLayers.includes(outfit[1])) {
-      const layer = 'Abercrombie textured overshirt — Brown/Charcoal Plaid';
-      return compatibleOuterwear(layer, outfit) ? layer : null;
-    }
-    if (!outerwearNeeded()) return null;
-
-    const pool = outerwear
-      .filter(layer => compatibleOuterwear(layer, outfit))
-      .map(layer => ({layer, s:outerwearScore(layer, outfit)}))
-      .sort((a,b)=>b.s-a.s);
-
-    return pool.length ? pool[0].layer : null;
+    // Outerwear is manual-only.
+    // If the user explicitly chooses a layer (e.g. outfit checker/build-around outerwear),
+    // preserve that manual selection; otherwise never auto-suggest a jacket.
+    if (forcedLayer) return forcedLayer;
+    return '';
   }
 
   function reason(o){
@@ -2513,7 +2527,6 @@ button.recent-love.liked{
     if (pant.includes('365') || pant.includes('ABC')) s += 3;
     if (top.includes('polo') || top.includes('Hugo Boss') || top.includes('Oxford') || top.includes('button-down')) s += 2.5;
     if (shoe.includes('Stan Smith')) s += 1.7;
-    if (shoe.includes('THE ROGER Clubhouse Pro')) s += 1.6;
     if (shoe.includes('Jordan') || shoe.includes('Black dress Blundstone')) s += 1.5;
     if (rainExpected() && chooseOuterwear(o)) s += 5;
     if (weatherClass().includes('cold') && isSweater(top)) s += 3;
@@ -2542,7 +2555,6 @@ button.recent-love.liked{
     if (top.includes('Oatmeal') || top.includes('Rainforest Green') || top.includes('Espresso')) s += 2;
     if (shoe.includes('Tobacco')) s += 2;
     if (shoe.includes('Black/white/mocha')) s += 1.5;
-    if (shoe.includes('THE ROGER Clubhouse Pro')) s += 1;
 
     const layer = chooseOuterwear(o);
     if (layer) {
