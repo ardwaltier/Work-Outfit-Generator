@@ -712,7 +712,7 @@ button.recent-love.liked{
   <header class="brand">
     <div class="kicker">Daily wardrobe</div>
     <h1>Outfit Picker</h1>
-    <div id="appBuildBadge" class="build-badge">Build 2026.09.30-mobile10 · Mobile compatible · Rebuilt from known-good baseline</div>
+    <div id="appBuildBadge" class="build-badge">Build 2026.10.06-mobile12 · Mobile compatible · Rebuilt from known-good baseline</div>
     <div class="ornament">■</div>
   </header>
   <div id="appErrorBanner" class="app-error-banner" role="alert"></div>
@@ -1032,7 +1032,7 @@ button.recent-love.liked{
     };
   }
 
-  window.__WARDROBE_BUILD__ = "2026.09.30-mobile10";
+  window.__WARDROBE_BUILD__ = "2026.10.06-mobile12";
   window.addEventListener('error', function(event){
     const banner=document.getElementById('appErrorBanner');
     if(banner){
@@ -2072,6 +2072,99 @@ button.recent-love.liked{
     return 'mild-dry';
   }
 
+
+  function pantStyleFamily(pant){
+    if (pant.includes('ABC')) return 'technical';
+    if (pant.includes('365')) return 'refined';
+    if (pant.includes('Cords')) return 'heritage';
+    if (pant.includes('jeans') || pant.includes('Levi') || pant.includes('denim')) return 'heritage';
+    return 'versatile';
+  }
+
+  function topStyleFamily(top){
+    if (top.includes('pique polo') || top.includes('T-shirt')) return 'technical';
+    if (top.includes('Lululemon Textured Knit Crewneck')) return 'technical';
+    if (top.includes('Oxford') || top.includes('Hugo Boss')) return 'refined';
+    if (top.includes('Marine Layer Inverness')) return 'refined';
+    if (top.includes('rugby') || top.includes('denim shirt') || top.includes('flannel') ||
+        top.includes('thermal') || top.includes('Waterfowl') || softWovenTops.includes(top)) return 'heritage';
+    if (top.includes('Quince Everyday Fleece Quarter-Zip') || top.includes('Marine Layer Espresso Crewneck')) return 'elevated-casual';
+    return 'versatile';
+  }
+
+  function shoeStyleFamily(shoe){
+    if (shoe.includes('Jordan')) return 'technical';
+    if (shoe.includes('Stan Smith') || shoe.includes('Cole Haan')) return 'refined';
+    if (shoe.includes('Blundstone')) return 'heritage';
+    return 'versatile';
+  }
+
+  function styleFamilyScore(o){
+    const [pant, top, shoe] = o;
+    const pf = pantStyleFamily(pant);
+    const tf = topStyleFamily(top);
+    const sf = shoeStyleFamily(shoe);
+    let s = 0;
+
+    // Strong coherence within a lane. 365 trousers can bridge refined and elevated casual looks.
+    if (pf === tf) s += 4;
+    if (pf === sf) s += 2;
+    if (tf === sf) s += 2;
+    if (pf === 'refined' && (tf === 'refined' || tf === 'elevated-casual')) s += 3;
+    if (pf === 'heritage' && (tf === 'heritage' || tf === 'elevated-casual')) s += 3;
+
+    // Technical pieces should look intentionally technical-clean, not accidentally mixed with heritage.
+    if (pf === 'technical' && tf === 'heritage') s -= 10;
+    if (pf === 'technical' && sf === 'heritage') s -= 8;
+    if (tf === 'heritage' && sf === 'technical' && pf === 'refined') s -= 2;
+
+    return s;
+  }
+
+  function tonalAndContrastScore(o){
+    const [pant, top, shoe] = o;
+    let s = 0;
+    const lightShoe = shoe.includes('White/gray') || shoe.includes('Stan Smith');
+
+    // Intentional tonal looks: same family, but with shade/texture separation.
+    if (pant.includes('Navy') && (top.includes('Navy') || top.includes('Heathered Classic Navy'))) {
+      s += top.includes('Lululemon') ? 4 : 2;
+      if (lightShoe) s += 1.5;
+    }
+    if ((pant.includes('Black') || pant.includes('Black slim')) &&
+        (top.includes('Heathered Black') || top.includes('Charcoal') || top.includes('Black'))) {
+      s += 2.5;
+      if (lightShoe) s += 1.5;
+    }
+    if (pant.includes('Khaki') && (top.includes('Cream') || top.includes('Oatmeal') || top.includes('tan/white'))) s += 3;
+    if ((pant.includes('Levi') || pant.includes('medium/dark')) && top.includes('Navy')) s += 2.5;
+
+    // Muddy tonal combinations: too similar in both hue and visual weight.
+    const brownCord = pant.includes('Flex Terry Cords');
+    const brownTrouser = pant.includes('Chocolate');
+    const espressoTop = top.includes('Espresso');
+    if (brownCord && espressoTop) s -= 14;
+    if (brownTrouser && espressoTop) s -= 5;
+
+    return s;
+  }
+
+  function textureCompatibilityScore(o){
+    const [pant, top] = o;
+    let s = 0;
+    const isCord = pant.includes('Cords');
+    const isDenim = pant.includes('jeans') || pant.includes('Levi') || pant.includes('denim');
+    const is365 = pant.includes('365');
+    const isHeritageTop = topStyleFamily(top) === 'heritage';
+    const isRefinedTop = topStyleFamily(top) === 'refined';
+
+    if (isCord && isHeritageTop) s += 2;
+    if (isDenim && (isHeritageTop || top.includes('Lululemon Textured Knit Crewneck'))) s += 2;
+    if (is365 && isRefinedTop) s += 2.5;
+    if (is365 && top.includes('Lululemon Textured Knit Crewneck')) s += 1.5;
+    return s;
+  }
+
   function compatible(o){
     if (skippedToday.has(key(o))) return false;
     const [pant, top, shoe] = o;
@@ -2092,12 +2185,14 @@ button.recent-love.liked{
 
     if (!topEligibleByWearHistory(top, selectedWearDate())) return false;
 
-    // HARD RULE: ABC pants are Jordan-only.
-    // In cool weather (<65°F forecast high), Lululemon knit crewneck sweaters are also a favorite ABC pairing.
+    // HARD RULE: ABC pants stay in a clean technical/casual lane and are Jordan-only.
+    // Allowed tops: pique polos, simple T-shirts, and Lululemon knit crewnecks.
     if (isABC && !isJordan) return false;
     if (isABC) {
       const isLuluCrewneck = top.includes('Lululemon Textured Knit Crewneck');
-      const abcTopAllowed = top.includes('polo') || (isLuluCrewneck && high < 65);
+      const isSimpleTee = top.includes('T-shirt');
+      const isPiquePolo = top.includes('pique polo');
+      const abcTopAllowed = isPiquePolo || isSimpleTee || (isLuluCrewneck && high < 65);
       if (!abcTopAllowed) return false;
     }
     // Favorite ABC + Lululemon sweater + Jordan outfit:
@@ -2112,6 +2207,19 @@ button.recent-love.liked{
       if (rainExpected() && t < 50) return false;
     }
     if (pant.includes('Green ABC') && top.includes('Rainforest Green')) return false;
+    if (pant.includes('Flex Terry Cords') && top.includes('Espresso F&T rugby')) return false;
+    // Guardrails: heritage/woven/textured tops do not pair with ABC trousers.
+    if (isABC && (
+      top.includes('Oxford') ||
+      top.includes('rugby') ||
+      top.includes('denim shirt') ||
+      top.includes('button-down') ||
+      top.includes('flannel') ||
+      top.includes('thermal') ||
+      top.includes('Waterfowl') ||
+      top.includes('Quince Everyday Fleece Quarter-Zip') ||
+      top.includes('Hugo Boss lightweight quarter-zip')
+    )) return false;
 
     // HARD RULE: Never suggest boots May through September.
     if (isBoot && month >= 5 && month <= 9) return false;
@@ -2197,36 +2305,36 @@ button.recent-love.liked{
 
     // WEATHER: strongest driver.
     if (cls === 'cold-wet') {
-      if (isBoot) s += 14;
-      if (isSweater(top)) s += 8;
-      if (top.includes('Waterfowl')) s += t < 42 ? 7 : 2;
-      if (isCord || isJean) s += 3;
+      if (isBoot) s += 6;
+      if (isSweater(top)) s += 3;
+      if (top.includes('Waterfowl')) s += t < 42 ? 3 : 1;
+      if (isCord || isJean) s += 1.5;
     } else if (cls === 'cold-dry') {
-      if (isBoot) s += 10;
-      if (isSweater(top)) s += 8;
-      if (top.includes('Waterfowl')) s += t < 42 ? 6 : 1;
-      if (isCord) s += 4;
+      if (isBoot) s += 5;
+      if (isSweater(top)) s += 3;
+      if (top.includes('Waterfowl')) s += t < 42 ? 3 : 1;
+      if (isCord) s += 2;
     } else if (cls === 'cool-dry' || cls === 'mild-wet') {
-      if (isBoot) s += cls === 'mild-wet' ? 9 : 5;
-      if (isSweater(top)) s += t <= 55 ? 7 : 3;
-      if (isRugby && high <= 72) s += 3;
-      if (isCord) s += 4;
+      if (isBoot) s += cls === 'mild-wet' ? 5 : 3;
+      if (isSweater(top)) s += t <= 55 ? 3 : 1.5;
+      if (isRugby && high <= 72) s += 1.5;
+      if (isCord) s += 2;
     } else if (cls === 'mild-dry') {
-      if (isStan) s += 4.5;
-      if (isJordan) s += 3.5;
-      if (top.includes('Oxford') || top.includes('polo')) s += 3;
-      if (isSweater(top) && t <= 61) s += 4;
+      if (isStan) s += 2.5;
+      if (isJordan) s += 2.5;
+      if (top.includes('Oxford') || top.includes('polo')) s += 2;
+      if (isSweater(top) && t <= 61) s += 2;
       if (top.includes('Hugo Boss') && t >= 55 && t < 67) s += 3;
       if (isRugby && high <= 72) s += 2.5;
     } else if (cls === 'warm-dry') {
-      if (isStan) s += 7;
-      if (isJordan) s += 6;
-      if (top.includes('polo')) s += 5;
+      if (isStan) s += 4;
+      if (isJordan) s += 4;
+      if (top.includes('polo')) s += 3;
       if (top.includes('Oxford')) s += 2;
     }
 
     // Warm-weather sneaker priority.
-    if (t >= 68 && (isStan || isJordan)) s += 4;
+    if (t >= 68 && (isStan || isJordan)) s += 2;
 
     // MONTH / SEASON: smaller bias.
     if (bias.includes('fall') || bias === 'winter') {
@@ -2246,20 +2354,15 @@ button.recent-love.liked{
       if (isTobaccoBoot || isStan || isJordan) s += 1.5;
     }
 
-    // CONTRAST RULES.
-    if (darkPant && lightTop) s += 3;
-    if (lightPant && darkTop) s += 3;
-    if (darkPant && darkTop) {
-      if (isStan || shoe.includes('White/gray')) s += 2;
-      else s -= 2;
-    }
+    // COLOR RELATIONSHIP: reward contrast, but preserve intentional tonal dressing.
+    if (darkPant && lightTop) s += 2.5;
+    if (lightPant && darkTop) s += 2.5;
+    s += tonalAndContrastScore(o);
 
-    // Avoid too much brown-on-brown unless a lighter top creates separation.
+    // Brown shoes can anchor warm neutrals, but should not turn the whole outfit muddy.
     const brownPant = pant.includes('Chocolate') || isCord;
     const brownShoe = isTobaccoBoot;
-    const brownTop = top.includes('Espresso') || top.includes('Cinder');
-    if (brownPant && brownShoe && brownTop) s -= 4;
-    if (brownPant && brownShoe && lightTop) s += 2.5;
+    if (brownPant && brownShoe && lightTop) s += 2;
 
     // ABC user preference.
     if (isABC && top.includes('polo') && isJordan) s += 8;
@@ -2281,6 +2384,9 @@ button.recent-love.liked{
     // Jeans: favor casual-work rather than polished.
     if (isJean && o[3] === 'casual') s += 2;
 
+    // HOLISTIC OUTFIT QUALITY: style language and texture now outweigh novelty.
+    s += styleFamilyScore(o);
+    s += textureCompatibilityScore(o);
     s += loveBonus(o);
     return s;
   }
@@ -2545,41 +2651,38 @@ button.recent-love.liked{
   function styleForwardScore(o){
     const [pant, top, shoe] = o;
     let s = score(o);
-    if (pant.includes('Cords')) s += 5;
-    if (top.includes('rugby')) s += 4;
-    if (top.includes('Banana Republic tan/white striped')) s += 3;
-    if (top.includes('Hugo Boss')) s += 2;
-    if (top.includes('Quince Everyday Fleece Quarter-Zip')) s += 1.2;
-    if (top.includes('Green/Navy Check') || top.includes('Navy/Burgundy Check')) s += 3;
-    if (overshirtBaseLayers.includes(top)) s += 5;
-    if (top.includes('Oatmeal') || top.includes('Rainforest Green') || top.includes('Espresso')) s += 2;
-    if (shoe.includes('Tobacco')) s += 2;
-    if (shoe.includes('Black/white/mocha')) s += 1.5;
-
-    const layer = chooseOuterwear(o);
-    if (layer) {
-      if (layer.includes('Loewe')) s += 6;
-      if (layer.includes('Barbour')) s += 3;
-      if (layer.includes('Filson All Season Waxed')) s += 3;
-      if (layer.includes('Filson Hyder')) s += 2.5;
-      if (layer.includes('Wool Herringbone')) s += 4;
-    }
+    // Style-forward means intentional: texture, tonal dressing, pattern, or a strong silhouette.
+    s += Math.max(0, tonalAndContrastScore(o));
+    s += Math.max(0, textureCompatibilityScore(o));
+    if (pant.includes('Cords')) s += 2.5;
+    if (top.includes('rugby')) s += 2;
+    if (top.includes('Banana Republic tan/white striped')) s += 2;
+    if (top.includes('Hugo Boss')) s += 1.5;
+    if (top.includes('Green/Navy Check') || top.includes('Navy/Burgundy Check')) s += 2;
+    if (top.includes('Oatmeal') || top.includes('Rainforest Green')) s += 1.5;
+    if (shoe.includes('Tobacco')) s += 1.5;
+    if (shoe.includes('Black/white/mocha')) s += 1;
     return s;
   }
 
   function chooseProfileOutfit(pool, scorer, usedKeys, usedPieces, diversityStrength=1){
     const ranked = pool.map(o => {
       let s = scorer(o);
-      if (usedPieces.pants.has(o[0])) s -= 3 * diversityStrength;
-      if (usedPieces.tops.has(o[1])) s -= 4 * diversityStrength;
-      if (usedPieces.shoes.has(o[2])) s -= 2.5 * diversityStrength;
+      // Diversity is a tiebreaker, not a reason to suppress a genuinely better outfit.
+      if (usedPieces.pants.has(o[0])) s -= 1.25 * diversityStrength;
+      if (usedPieces.tops.has(o[1])) s -= 1.75 * diversityStrength;
+      if (usedPieces.shoes.has(o[2])) s -= 1 * diversityStrength;
       if (usedKeys.has(key(o))) s -= 100;
       return {o, s};
     }).sort((a,b)=>b.s-a.s);
 
-    const shortlist = ranked.slice(0, Math.min(5, ranked.length));
+    const shortlist = ranked.slice(0, Math.min(3, ranked.length));
     if (!shortlist.length) return null;
-    return shortlist[Math.floor(Math.random() * shortlist.length)].o;
+    // Favor the strongest recommendation while retaining a little variety among near-equals.
+    const r = Math.random();
+    if (shortlist.length === 1 || r < .62) return shortlist[0].o;
+    if (shortlist.length === 2 || r < .90) return shortlist[1].o;
+    return shortlist[2].o;
   }
 
   function fillSelect(selectEl, values, selectedValue, includeNone=false){
