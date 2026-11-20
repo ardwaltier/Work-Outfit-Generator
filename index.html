@@ -712,7 +712,7 @@ button.recent-love.liked{
   <header class="brand">
     <div class="kicker">Daily wardrobe</div>
     <h1>Outfit Picker</h1>
-    <div id="appBuildBadge" class="build-badge">Build 2026.10.06-mobile12 · Mobile compatible · Rebuilt from known-good baseline</div>
+    <div id="appBuildBadge" class="build-badge">Build 2026.11.17-mobile13 · Mobile compatible · Rebuilt from known-good baseline</div>
     <div class="ornament">■</div>
   </header>
   <div id="appErrorBanner" class="app-error-banner" role="alert"></div>
@@ -993,9 +993,9 @@ button.recent-love.liked{
 
   <details>
     <summary>How recommendations work</summary>
-    <div class="details-body"><strong>Weather wins:</strong> Daily recommendations intentionally exclude outerwear; jackets are manual-only. choose Today or Tomorrow; the selected day’s temperature, feels-like temperature, forecast high and precipitation are the strongest inputs.
+    <div class="details-body"><strong>Weather wins:</strong> Outerwear is only added in genuinely cold or cold-wet conditions and must match the outfit's style family. choose Today or Tomorrow; the selected day’s temperature, feels-like temperature, forecast high and precipitation are the strongest inputs.
       The cream Hugo Boss quarter-zip is your lightest sweater. The washed-deep-navy Quince fleece quarter-zip is warmer and more casual, with a hard forecast-high ceiling around 62°F. The cream Hugo Boss quarter-zip and can appear into the mid-60s; heavier sweaters are held for cooler weather, and the L.L.Bean Waterfowl sweater is reserved mostly for sub-50°F days.
-      Outerwear is manual-only. Daily recommendations focus on pants, top, and shoes; jackets and layers can still be selected when logging or checking an outfit.
+      Outerwear is recommended only when conditions justify it. Below about 45°F, or in cold rain, the app may add a compatible layer; Barbour and Filson are boots-only.
       Dark-brown cords are primarily October–March and are excluded in warmer weather.
       Forecast high is the hard ceiling for warm/heavy tops: the denim shirt to about 77°F, rugby shirts can go up to 72°F, soft-woven shirts to about 68°F, the cream waffle thermal to 62°F, the brown Filson thermal to 60°F, and the heavyweight charcoal flannel to about 58°F. Effective temperature still helps rank eligible outfits, but it cannot override those ceilings.
       Your 28″ ABC pants are polo-first and Jordan-only—boots and Stan Smiths are excluded with them.
@@ -1032,7 +1032,7 @@ button.recent-love.liked{
     };
   }
 
-  window.__WARDROBE_BUILD__ = "2026.10.06-mobile12";
+  window.__WARDROBE_BUILD__ = "2026.11.17-mobile13";
   window.addEventListener('error', function(event){
     const banner=document.getElementById('appErrorBanner');
     if(banner){
@@ -1066,8 +1066,9 @@ button.recent-love.liked{
     'Lululemon Textured Knit Crewneck — Heathered Classic Navy',
     'Lululemon Textured Knit Crewneck — Rainforest Green',
     'Lululemon Textured Knit Crewneck — Heathered Black/Charcoal',
-    'L.L.Bean Waterfowl Sweater — Dark Cinder'
-  ];
+    'L.L.Bean Waterfowl Sweater — Dark Cinder',
+    'L.L.Bean Organic Cotton Waffle Sweater Rollneck Crew — Dark Cinder'
+];
 
   const softWovenTops = [
     'UNIQLO soft-woven button-down — Cream',
@@ -1121,6 +1122,7 @@ button.recent-love.liked{
   const displayNames = {
   "Cole Haan GrandPro Crossover Sneakers — Black": "Cole Haan - Black GrandPrø Crossover Sneakers",
   "Marine Layer Espresso Crewneck Sweatshirt": "Marine Layer - Espresso Crewneck Sweatshirt",
+  "L.L.Bean Organic Cotton Waffle Sweater Rollneck Crew — Dark Cinder": "L.L.Bean - Dark Cinder Waffle Rollneck Crew",
   "Chocolate 365": "Chocolate 365 Trousers",
   "Navy 365": "Navy 365 Trousers",
   "Khaki 365": "Khaki 365 Trousers",
@@ -2238,6 +2240,13 @@ button.recent-love.liked{
         high > 64) return false;
     if (top.includes('Waterfowl') && high > 50) return false;
 
+
+    // L.L.Bean Dark Cinder waffle rollneck: cool-weather heritage/refined knit.
+    if (top === 'L.L.Bean Organic Cotton Waffle Sweater Rollneck Crew — Dark Cinder') {
+      if (high > 60) return false;
+      if (isABC) return false;
+    }
+
     // Cords are cool-weather and seasonal.
     if (isCord && (month < 10 && month > 3)) return false;
     if (isCord && t >= 68) return false;
@@ -2435,6 +2444,16 @@ button.recent-love.liked{
 
     let s = Math.random();
 
+    // Hard style-family preferences for outerwear.
+    if ((layer.includes('Barbour') || layer.includes('Filson')) && !isTobaccoBoot && !shoe.includes('Black dress Blundstone')) return -1000;
+    if ((pant.includes('ABC') || shoe.includes('Jordan')) &&
+        (layer.includes('Barbour') || layer.includes('Filson') || layer.includes('Loewe') || layer.includes('Reigning Champ Wool Herringbone'))) return -1000;
+
+    // Modern/clean outerwear is preferred with ABC + Jordans.
+    if ((pant.includes('ABC') || shoe.includes('Jordan')) &&
+        (layer.includes('Outdoor Research') || layer.includes('Patagonia') || layer.includes('Canada Goose') || layer.includes('UNIQLO Windproof'))) s += 8;
+
+
     if (layer.includes('Barbour Ashby')) {
       if (rain) s += 14;
       if (fallWinter) s += 8;
@@ -2584,11 +2603,41 @@ button.recent-love.liked{
 
 
   function chooseOuterwear(outfit, forcedLayer=null){
-    // Outerwear is manual-only.
-    // If the user explicitly chooses a layer (e.g. outfit checker/build-around outerwear),
-    // preserve that manual selection; otherwise never auto-suggest a jacket.
     if (forcedLayer) return forcedLayer;
-    return '';
+    if (!outfit) return '';
+
+    const [pant, top, shoe] = outfit;
+    const t = effectiveTemp();
+    const rain = rainExpected();
+    const isBoot = shoe.includes('Blundstone');
+    const isJordan = shoe.includes('Jordan');
+    const isABC = pant.includes('ABC');
+
+    // Recommend outerwear when it is genuinely cold, or cold and wet.
+    let shouldLayer = t < 45;
+    if (rain && t < 52) shouldLayer = true;
+    if (!shouldLayer) return '';
+
+    const candidates = outerwear.filter(layer => {
+      // Barbour and Filson are boots-only in this wardrobe.
+      if ((layer.includes('Barbour') || layer.includes('Filson')) && !isBoot) return false;
+
+      // ABC + Jordans stay in the clean/modern lane.
+      if (isABC || isJordan) {
+        if (layer.includes('Barbour') || layer.includes('Filson')) return false;
+        if (layer.includes('Loewe')) return false;
+        if (layer.includes('Reigning Champ Wool Herringbone')) return false;
+      }
+
+      if (layer.includes('Loewe quilted jacket') && outfitHasGreenPiece(outfit)) return false;
+      return true;
+    });
+
+    if (!candidates.length) return '';
+
+    return candidates
+      .map(layer => ({layer, s: outerwearScore(layer, outfit)}))
+      .sort((a,b) => b.s - a.s)[0].layer;
   }
 
   function reason(o){
