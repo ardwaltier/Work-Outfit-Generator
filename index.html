@@ -705,6 +705,12 @@ button.recent-love.liked{
 }
 .app-error-banner.show{display:block}
 
+
+    .feedback-row{display:flex;gap:8px;flex-wrap:wrap;align-items:center;margin-top:8px}
+    .dislike{background:#f4eee8;color:#5e302b;border:1px solid #b78b83}
+    .dislike.disliked{background:#5e302b;color:#fff;border-color:#5e302b}
+    .feedback-meta{font-size:.9rem;color:#625d55;margin-top:8px;line-height:1.4}
+    .check-actions{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
 </style>
 </head>
 <body>
@@ -712,7 +718,7 @@ button.recent-love.liked{
   <header class="brand">
     <div class="kicker">Daily wardrobe</div>
     <h1>Outfit Picker</h1>
-    <div id="appBuildBadge" class="build-badge">Build 2026.11.17-mobile13 · Mobile compatible · Rebuilt from known-good baseline</div>
+    <div id="appBuildBadge" class="build-badge">Build 2026.11.20-mobile14 · Mobile compatible · Rebuilt from known-good baseline</div>
     <div class="ornament">■</div>
   </header>
   <div id="appErrorBanner" class="app-error-banner" role="alert"></div>
@@ -800,6 +806,7 @@ button.recent-love.liked{
               <button id="practicalWoreBtn" type="button" class="wore">I’m wearing this</button>
               <div class="love-row">
                 <button id="practicalLoveBtn" type="button" class="love">I liked this outfit</button>
+                <button id="practicalDislikeBtn" type="button" class="dislike">Dislike</button>
                 <div id="practicalLoveStatus" class="love-status"></div>
               </div>
               <div id="practicalWearStatus" class="wear-status" aria-live="polite"></div>
@@ -841,6 +848,7 @@ button.recent-love.liked{
               <button id="balancedWoreBtn" type="button" class="wore">I’m wearing this</button>
               <div class="love-row">
                 <button id="balancedLoveBtn" type="button" class="love">I liked this outfit</button>
+                <button id="balancedDislikeBtn" type="button" class="dislike">Dislike</button>
                 <div id="balancedLoveStatus" class="love-status"></div>
               </div>
               <div id="balancedWearStatus" class="wear-status" aria-live="polite"></div>
@@ -882,6 +890,7 @@ button.recent-love.liked{
               <button id="styleWoreBtn" type="button" class="wore">I’m wearing this</button>
               <div class="love-row">
                 <button id="styleLoveBtn" type="button" class="love">I liked this outfit</button>
+                <button id="styleDislikeBtn" type="button" class="dislike">Dislike</button>
                 <div id="styleLoveStatus" class="love-status"></div>
               </div>
               <div id="styleWearStatus" class="wear-status" aria-live="polite"></div>
@@ -932,7 +941,13 @@ button.recent-love.liked{
         <div><label for="checkShoes">Shoes</label><select id="checkShoes"></select></div>
         <div><label for="checkLayer">Layer</label><select id="checkLayer"></select></div>
       </div>
-      <button id="checkOutfitBtn" type="button">Analyze outfit</button>
+      <div class="check-actions">
+        <button id="checkOutfitBtn" type="button">Analyze outfit</button>
+        <button id="checkWoreBtn" type="button" class="wore">I wore this</button>
+        <button id="checkDislikeBtn" type="button" class="dislike">Dislike</button>
+      </div>
+      <div id="checkFeedbackMeta" class="feedback-meta"></div>
+      <div id="checkWearStatus" class="wear-status" aria-live="polite"></div>
       <div id="checkOutfitResult" class="check-result hidden"></div>
     </div>
   </details>
@@ -1032,7 +1047,7 @@ button.recent-love.liked{
     };
   }
 
-  window.__WARDROBE_BUILD__ = "2026.11.17-mobile13";
+  window.__WARDROBE_BUILD__ = "2026.11.20-mobile14";
   window.addEventListener('error', function(event){
     const banner=document.getElementById('appErrorBanner');
     if(banner){
@@ -1314,6 +1329,26 @@ button.recent-love.liked{
   const wearHistoryKey = 'outfitPickerWearHistoryV1';
   const wearLogKey = 'outfitPickerWearLogV1';
   const loveHistoryKey = 'outfitPickerLoveHistoryV1';
+  const dislikeHistoryKey = 'outfitPickerDislikeHistoryV1';
+
+  function coreOutfitKey(pantsValue, topValue, shoesValue){
+    return [pantsValue, topValue, shoesValue].join('||');
+  }
+
+  // Legacy helper retained for old stored data / workwear controls.
+  function exactOutfitKey(pantsValue, topValue, shoesValue, layerValue=''){
+    return [pantsValue, topValue, shoesValue, layerValue || ''].join('||');
+  }
+
+  function entryCoreKey(entry){
+    if(!entry || typeof entry!=='object') return '';
+    if(entry.coreKey) return entry.coreKey;
+    if(entry.exactKey){
+      const parts=String(entry.exactKey).split('||');
+      if(parts.length>=3) return coreOutfitKey(parts[0],parts[1],parts[2]);
+    }
+    return '';
+  }
 
   function loadLoveHistory(){
     try {
@@ -1321,32 +1356,87 @@ button.recent-love.liked{
       return Array.isArray(a) ? a.filter(e=>e && typeof e==='object') : [];
     } catch(e){ return []; }
   }
-  function saveLoveHistory(a){ try { localStorage.setItem(loveHistoryKey, JSON.stringify(a.slice(-40))); } catch(e){ console.warn('Could not save liked outfits',e); } }
-  function exactOutfitKey(pantsValue, topValue, shoesValue, layerValue=''){
-    return [pantsValue, topValue, shoesValue, layerValue || ''].join('||');
+
+  function saveLoveHistory(a){
+    try { localStorage.setItem(loveHistoryKey, JSON.stringify(a.slice(-100))); }
+    catch(e){ console.warn('Could not save liked outfits',e); }
   }
 
-  function isLovedExact(exactKey){
-    return loadLoveHistory().some(entry => entry.exactKey === exactKey);
+  function likeStatsForCore(coreKey){
+    const matches=loadLoveHistory().filter(e=>entryCoreKey(e)===coreKey);
+    let count=0, active=false;
+    matches.forEach(e=>{
+      count += Number(e.count || 1);
+      if(e.active !== false) active=true;
+    });
+    return {count, active};
   }
 
-  function setLoveButtonState(button, liked){
+  function isLovedCore(coreKey){
+    return likeStatsForCore(coreKey).active;
+  }
+
+  function setLoveButtonState(button, liked, count=0){
     if (!button) return;
     if (liked) button.classList.add('liked');
     else button.classList.remove('liked');
-    button.textContent = liked ? 'Liked ✓' : 'I liked this outfit';
+    button.textContent = liked ? `Liked ✓${count>1 ? ' ×'+count : ''}` : 'I liked this outfit';
     button.disabled = false;
+  }
+
+  function loadDislikeHistory(){
+    try {
+      const a=JSON.parse(localStorage.getItem(dislikeHistoryKey)||'[]');
+      return Array.isArray(a) ? a.filter(k=>typeof k==='string') : [];
+    } catch(e){ return []; }
+  }
+
+  function saveDislikeHistory(a){
+    try { localStorage.setItem(dislikeHistoryKey, JSON.stringify(Array.from(new Set(a)))); }
+    catch(e){ console.warn('Could not save disliked outfits',e); }
+  }
+
+  function isDislikedCore(coreKey){
+    return loadDislikeHistory().includes(coreKey);
+  }
+
+  function setDislikeButtonState(button, disliked){
+    if(!button) return;
+    if(disliked) button.classList.add('disliked');
+    else button.classList.remove('disliked');
+    button.textContent = disliked ? 'Undo dislike' : 'Dislike';
+    button.disabled = false;
+  }
+
+  function toggleDislikeCore(coreKey){
+    const current=loadDislikeHistory();
+    const disliked=current.includes(coreKey);
+    const updated=disliked ? current.filter(k=>k!==coreKey) : current.concat(coreKey);
+    saveDislikeHistory(updated);
+    return !disliked;
   }
 
   function refreshCurrentLoveButtons(){
     ['practical','balanced','style'].forEach(profile => {
       const actual = actualOutfitFor(profile);
-      const btn = $(profile+'LoveBtn');
-      if (!actual || !btn) return;
-      const exactKey = exactOutfitKey(actual.pants, actual.top, actual.shoes, actual.layer || '');
-      setLoveButtonState(btn, isLovedExact(exactKey));
+      const loveBtn = $(profile+'LoveBtn');
+      const dislikeBtn = $(profile+'DislikeBtn');
+      if (!actual) return;
+      const coreKey = coreOutfitKey(actual.pants, actual.top, actual.shoes);
+      const stats=likeStatsForCore(coreKey);
+      setLoveButtonState(loveBtn, stats.active, stats.count);
+      setDislikeButtonState(dislikeBtn, isDislikedCore(coreKey));
     });
+    refreshCheckFeedback();
   }
+
+
+  function isLovedExact(exactKey){
+    const parts=String(exactKey||'').split('||');
+    if(parts.length<3) return false;
+    return isLovedCore(coreOutfitKey(parts[0],parts[1],parts[2]));
+  }
+
 
 
   function outfitTraits(outfit, layer=''){
@@ -1369,51 +1459,69 @@ button.recent-love.liked{
   }
 
   function loveBonus(outfit){
-    const h=loadLoveHistory();
-    if(!h.length) return 0;
-    const layer=chooseOuterwear(outfit)||'';
-    const exact=[outfit[0],outfit[1],outfit[2],layer].join('||');
-    const traits=outfitTraits(outfit,layer);
-    let b=0;
-    h.forEach(e=>{
-      if(e.exactKey===exact) b+=1.5;
-      const overlap=traits.filter(x=>(e.traits||[]).includes(x)).length;
-      b+=Math.min(overlap*.35,1.2);
-    });
-    return Math.min(b,4);
+    const coreKey=coreOutfitKey(outfit[0],outfit[1],outfit[2]);
+    const stats=likeStatsForCore(coreKey);
+    if(!stats.active || !stats.count) return 0;
+
+    // Exact core-outfit likes are intentionally the strongest positive preference signal.
+    return Math.min(18, 10 + Math.min(stats.count-1,4)*2);
   }
 
   function saveLovedOutfit(profile){
     const a=actualOutfitFor(profile);
     if(!a) return;
 
-    const exactKey=exactOutfitKey(a.pants,a.top,a.shoes,a.layer||'');
-    if(isLovedExact(exactKey)){
-      const existing=loadLoveHistory();
-      const updated=[];
-      for(let i=0;i<existing.length;i++){
-        if(existing[i].exactKey!==exactKey) updated.push(existing[i]);
-      }
+    const coreKey=coreOutfitKey(a.pants,a.top,a.shoes);
+    const existing=loadLoveHistory();
+    const stats=likeStatsForCore(coreKey);
+
+    if(stats.active){
+      // Turn off the active preference but preserve the historical like count.
+      const updated=existing.map(e=>{
+        if(entryCoreKey(e)===coreKey) return Object.assign({},e,{active:false,coreKey});
+        return e;
+      });
       saveLoveHistory(updated);
-      setLoveButtonState($(profile+'LoveBtn'), false);
-      $(profile+'LoveStatus').textContent='Removed from style preferences.';
-      renderRecentWorkwear();
+      setLoveButtonState($(profile+'LoveBtn'), false, stats.count);
+      $(profile+'LoveStatus').textContent=`Removed as an active preference. Historical likes: ${stats.count}.`;
       refreshCurrentLoveButtons();
+      renderRecentWorkwear();
       return;
     }
 
-    const o=[a.pants,a.top,a.shoes,'casual'];
-    const h=loadLoveHistory();
-    h.push({
-      exactKey,
-      traits:outfitTraits(o,a.layer||''),
+    // Re-liking increments the historical count and makes the preference active.
+    const retained=existing.filter(e=>entryCoreKey(e)!==coreKey);
+    retained.push({
+      coreKey,
+      count:stats.count+1,
+      active:true,
+      traits:outfitTraits([a.pants,a.top,a.shoes,'casual'],''),
       date:localDateString(selectedWearDate())
     });
-    saveLoveHistory(h);
+    saveLoveHistory(retained);
 
-    setLoveButtonState($(profile+'LoveBtn'), true);
-    $(profile+'LoveStatus').textContent='Saved as a style preference.';
+    // A positive like also reverses an existing dislike for the exact same trio.
+    if(isDislikedCore(coreKey)){
+      saveDislikeHistory(loadDislikeHistory().filter(k=>k!==coreKey));
+    }
+
+    setLoveButtonState($(profile+'LoveBtn'), true, stats.count+1);
+    $(profile+'LoveStatus').textContent=`Saved as a strong preference. Liked ${stats.count+1} time${stats.count+1===1?'':'s'}.`;
+    refreshCurrentLoveButtons();
     renderRecentWorkwear();
+  }
+
+  function toggleDislikeForProfile(profile){
+    const a=actualOutfitFor(profile);
+    if(!a) return;
+    const coreKey=coreOutfitKey(a.pants,a.top,a.shoes);
+    const nowDisliked=toggleDislikeCore(coreKey);
+    setDislikeButtonState($(profile+'DislikeBtn'), nowDisliked);
+    $(profile+'LoveStatus').textContent = nowDisliked
+      ? 'This exact pants + top + shoes combination will never be recommended unless you undo the dislike.'
+      : 'Dislike removed. This combination is eligible again.';
+    refreshCurrentLoveButtons();
+    if(nowDisliked) setTimeout(generate,250);
   }
 
 
@@ -1453,30 +1561,29 @@ button.recent-love.liked{
 
   function loveRecentOutfit(entry, button){
     if (!entry) return;
-    const exactKey=exactOutfitKey(entry.pants,entry.top,entry.shoes,entry.layer||'');
+    const coreKey=coreOutfitKey(entry.pants,entry.top,entry.shoes);
+    const existing=loadLoveHistory();
+    const stats=likeStatsForCore(coreKey);
 
-    if(isLovedExact(exactKey)){
-      const existing=loadLoveHistory();
-      const updated=[];
-      for(let i=0;i<existing.length;i++){
-        if(existing[i].exactKey!==exactKey) updated.push(existing[i]);
-      }
+    if(stats.active){
+      const updated=existing.map(e=>entryCoreKey(e)===coreKey ? Object.assign({},e,{active:false,coreKey}) : e);
       saveLoveHistory(updated);
-      setLoveButtonState(button, false);
+      setLoveButtonState(button, false, stats.count);
       refreshCurrentLoveButtons();
       return;
     }
 
-    const o=[entry.pants,entry.top,entry.shoes,'casual'];
-    const h=loadLoveHistory();
-    h.push({
-      exactKey,
-      traits:outfitTraits(o,entry.layer||''),
+    const retained=existing.filter(e=>entryCoreKey(e)!==coreKey);
+    retained.push({
+      coreKey,
+      count:stats.count+1,
+      active:true,
+      traits:outfitTraits([entry.pants,entry.top,entry.shoes,'casual'],''),
       date:entry.date
     });
-    saveLoveHistory(h);
-
-    setLoveButtonState(button, true);
+    saveLoveHistory(retained);
+    if(isDislikedCore(coreKey)) saveDislikeHistory(loadDislikeHistory().filter(k=>k!==coreKey));
+    setLoveButtonState(button, true, stats.count+1);
     refreshCurrentLoveButtons();
   }
 
@@ -2169,6 +2276,7 @@ button.recent-love.liked{
 
   function compatible(o){
     if (skippedToday.has(key(o))) return false;
+    if (isDislikedCore(coreOutfitKey(o[0],o[1],o[2]))) return false;
     const [pant, top, shoe] = o;
     const t = effectiveTemp();
     const high = wx ? wx.high : t;
@@ -2672,7 +2780,6 @@ button.recent-love.liked{
     let pool = allCandidateOutfits().filter(compatible);
     const dress = $('dress').value;
     if (dress !== 'any') pool = pool.filter(o => o[3] === dress);
-    if (!pool.length) pool = allCandidateOutfits().filter(o => !skippedToday.has(key(o)) && (dress === 'any' || o[3] === dress));
     return pool;
   }
 
@@ -2717,21 +2824,15 @@ button.recent-love.liked{
   function chooseProfileOutfit(pool, scorer, usedKeys, usedPieces, diversityStrength=1){
     const ranked = pool.map(o => {
       let s = scorer(o);
-      // Diversity is a tiebreaker, not a reason to suppress a genuinely better outfit.
-      if (usedPieces.pants.has(o[0])) s -= 1.25 * diversityStrength;
-      if (usedPieces.tops.has(o[1])) s -= 1.75 * diversityStrength;
-      if (usedPieces.shoes.has(o[2])) s -= 1 * diversityStrength;
+      // Diversity only separates the three recommendation slots; it does not override preference quality.
+      if (usedPieces.pants.has(o[0])) s -= .75 * diversityStrength;
+      if (usedPieces.tops.has(o[1])) s -= 1 * diversityStrength;
+      if (usedPieces.shoes.has(o[2])) s -= .5 * diversityStrength;
       if (usedKeys.has(key(o))) s -= 100;
       return {o, s};
     }).sort((a,b)=>b.s-a.s);
 
-    const shortlist = ranked.slice(0, Math.min(3, ranked.length));
-    if (!shortlist.length) return null;
-    // Favor the strongest recommendation while retaining a little variety among near-equals.
-    const r = Math.random();
-    if (shortlist.length === 1 || r < .62) return shortlist[0].o;
-    if (shortlist.length === 2 || r < .90) return shortlist[1].o;
-    return shortlist[2].o;
+    return ranked.length ? ranked[0].o : null;
   }
 
   function fillSelect(selectEl, values, selectedValue, includeNone=false){
@@ -2799,12 +2900,13 @@ button.recent-love.liked{
     const adjust = $(prefix+'Adjust');
     if (adjust) adjust.open = false;
 
-    const loveBtn = $(prefix+'LoveBtn');
-    if (loveBtn) {
-      const exactKey = exactOutfitKey(outfit[0], outfit[1], outfit[2], layer || '');
-      setLoveButtonState(loveBtn, isLovedExact(exactKey));
-      $(prefix+'LoveStatus').textContent = '';
-    }
+    const coreKey = coreOutfitKey(outfit[0], outfit[1], outfit[2]);
+    const stats = likeStatsForCore(coreKey);
+    setLoveButtonState($(prefix+'LoveBtn'), stats.active, stats.count);
+    setDislikeButtonState($(prefix+'DislikeBtn'), isDislikedCore(coreKey));
+    $(prefix+'LoveStatus').textContent = stats.count
+      ? `Liked ${stats.count} time${stats.count===1?'':'s'} in your history.`
+      : '';
   }
 
   function generate(){
@@ -2903,6 +3005,66 @@ button.recent-love.liked{
     fillSelect($('checkTop'), tops, tops[0]);
     fillSelect($('checkShoes'), shoes, shoes[0]);
     fillSelect($('checkLayer'), outerwear, '', true);
+    ['checkPants','checkTop','checkShoes','checkLayer'].forEach(id=>{
+      const el=$(id);
+      if(el) el.addEventListener('change', refreshCheckFeedback);
+    });
+    refreshCheckFeedback();
+  }
+
+  function checkedOutfitActual(){
+    return {
+      pants:$('checkPants').value,
+      top:$('checkTop').value,
+      shoes:$('checkShoes').value,
+      layer:$('checkLayer').value || ''
+    };
+  }
+
+  function refreshCheckFeedback(){
+    if(!$('checkPants') || !$('checkTop') || !$('checkShoes')) return;
+    const a=checkedOutfitActual();
+    if(!a.pants || !a.top || !a.shoes) return;
+    const coreKey=coreOutfitKey(a.pants,a.top,a.shoes);
+    const stats=likeStatsForCore(coreKey);
+    const disliked=isDislikedCore(coreKey);
+    const meta=$('checkFeedbackMeta');
+    if(meta){
+      const likeText=stats.count
+        ? `You’ve liked this core outfit ${stats.count} time${stats.count===1?'':'s'}.`
+        : `You haven’t liked this core outfit yet.`;
+      const dislikeText=disliked
+        ? ' It is currently disliked and excluded from all recommendations.'
+        : '';
+      meta.textContent=likeText+dislikeText;
+    }
+    setDislikeButtonState($('checkDislikeBtn'), disliked);
+  }
+
+  function toggleCheckedDislike(){
+    const a=checkedOutfitActual();
+    const coreKey=coreOutfitKey(a.pants,a.top,a.shoes);
+    const nowDisliked=toggleDislikeCore(coreKey);
+    setDislikeButtonState($('checkDislikeBtn'), nowDisliked);
+    $('checkWearStatus').textContent=nowDisliked
+      ? 'Disliked. This exact pants + top + shoes combination is permanently excluded from recommendations.'
+      : 'Dislike removed. This combination is eligible for recommendations again.';
+    refreshCheckFeedback();
+    analyzeCheckedOutfit();
+  }
+
+  function confirmCheckedOutfitWorn(){
+    const a=checkedOutfitActual();
+    const wearDate=selectedWearDate();
+    saveConfirmedOutfit(wearDate,a);
+
+    const history=loadWearHistory();
+    history[a.top]=localDateString(wearDate);
+    saveWearHistory(history);
+
+    renderRecentWorkwear();
+    refreshCheckFeedback();
+    $('checkWearStatus').textContent=`Logged for ${formatShortDate(wearDate)}.`;
   }
 
   function analyzeCheckedOutfit(){
@@ -2944,13 +3106,22 @@ button.recent-love.liked{
     if(!issues.length) positives.push('The pieces fit your established wardrobe rules and proportions.');
 
     const verdict=issues.length>=2?'I’d skip it':issues.length===1?'Works with one tweak':'Works well';
+    const coreKey=coreOutfitKey(pant,top,shoe);
+    const stats=likeStatsForCore(coreKey);
+    const disliked=isDislikedCore(coreKey);
+
     let text=`<strong>${verdict}</strong>`;
+    text += stats.count
+      ? ` <span class="small">Liked ${stats.count} time${stats.count===1?'':'s'} previously.</span>`
+      : ` <span class="small">No prior likes recorded.</span>`;
+    if(disliked) text += ` <span class="small"><strong>Currently disliked — excluded from recommendations.</strong></span>`;
     if(positives.length) text+=positives.slice(0,2).join(' ');
     if(issues.length) text+=(positives.length?' ':'')+issues[0];
     if(suggestions.length) text+=' '+suggestions[0];
     if(issues.length===1 && layer && !compatibleOuterwear(layer,outfit) && !suggestions.length) text+=' I’d keep the base outfit and change or remove the layer.';
     result.innerHTML=text;
     result.classList.remove('hidden');
+    refreshCheckFeedback();
   }
 
   function refreshItems(){
@@ -3168,9 +3339,14 @@ button.recent-love.liked{
   safeOn('exportWorkwearCsvBtn','click',exportWorkwearCsv);
   safeOn('yearReviewBtn','click',toggleYearReview);
   safeOn('checkOutfitBtn','click',analyzeCheckedOutfit);
+  safeOn('checkWoreBtn','click',confirmCheckedOutfitWorn);
+  safeOn('checkDislikeBtn','click',toggleCheckedDislike);
   safeOn('practicalLoveBtn','click',()=>saveLovedOutfit('practical'));
+  safeOn('practicalDislikeBtn','click',()=>toggleDislikeForProfile('practical'));
   safeOn('balancedLoveBtn','click',()=>saveLovedOutfit('balanced'));
+  safeOn('balancedDislikeBtn','click',()=>toggleDislikeForProfile('balanced'));
   safeOn('styleLoveBtn','click',()=>saveLovedOutfit('style'));
+  safeOn('styleDislikeBtn','click',()=>toggleDislikeForProfile('style'));
 
   const initSteps=[
     ['item picker',refreshItems],
